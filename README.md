@@ -2,10 +2,56 @@
 
 > Sistema inteligente de análisis y gestión de inversiones en criptomonedas
 
-[![Python](https://img.shields.io/badge/Python-3.11-blue.svg)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.11.2-blue.svg)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Flask-3.0-green.svg)](https://flask.palletsprojects.com/)
 [![License](https://img.shields.io/badge/License-Private-red.svg)]()
 [![Status](https://img.shields.io/badge/Status-Active-success.svg)]()
+[![GitHub](https://img.shields.io/badge/GitHub-Kryptonite-181717.svg?logo=github)](https://github.com/acabellan1868-prog/kryptonite)
+
+---
+
+## 📑 Tabla de Contenidos
+
+- [Inicio Rápido](#-inicio-rápido)
+- [Descripción](#-descripción)
+- [Características Principales](#-características-principales)
+- [Arquitectura](#-arquitectura)
+- [Stack Tecnológico](#-stack-tecnológico)
+- [Base de Datos](#-base-de-datos)
+- [Instalación](#-instalación)
+- [Uso](#-uso)
+- [Agente IA Conversacional](#-agente-ia-conversacional)
+- [Estrategias de Trading](#-estrategias-de-trading)
+- [Backtesting](#-backtesting)
+- [Estructura del Proyecto](#-estructura-del-proyecto)
+- [Seguridad](#-seguridad)
+- [Roadmap 2025](#-roadmap-2025)
+- [Referencias](#-referencias-y-documentación)
+- [Autor](#-autor)
+
+---
+
+## 🚀 Inicio Rápido
+
+```bash
+# Clonar el repositorio
+git clone https://github.com/acabellan1868-prog/kryptonite.git
+cd kryptonite
+
+# Crear entorno virtual e instalar dependencias
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# Configurar variables de entorno
+cp parametros.env.example parametros.env
+# Edita parametros.env con tus API keys
+
+# Iniciar la API
+python3 src/api.py
+```
+
+> La API estará disponible en `http://localhost:5000`
 
 ---
 
@@ -60,16 +106,18 @@ El nombre es simbólico: mientras que la kryptonita es la debilidad de Superman,
 
 | Componente | Tecnología |
 |------------|------------|
-| **Lenguaje** | Python 3.11 |
-| **Framework API** | Flask |
-| **Base de Datos** | SQLite |
-| **Orquestador** | Node-RED |
-| **Interfaz** | Telegram Bot |
-| **Exchange** | Binance |
-| **IA/LLM** | Groq (LangChain) |
-| **ML** | scikit-learn |
-| **Análisis Técnico** | pandas-ta |
-| **Visualización** | Matplotlib, Plotly |
+| **Lenguaje** | Python 3.11.2 |
+| **Framework API** | Flask 3.0 |
+| **Base de Datos** | SQLite 3 |
+| **Orquestador** | Node-RED (opcional) |
+| **Interfaz** | Telegram Bot + API REST |
+| **Exchange** | Binance API |
+| **IA/LLM** | Groq (llama-3.3-70b-versatile) |
+| **Framework IA** | LangChain + LangGraph |
+| **ML** | scikit-learn 1.3.0 |
+| **Análisis Técnico** | pandas-ta 0.3.14b0 |
+| **Visualización** | Matplotlib 3.7.2, Plotly 5.11.0 |
+| **APIs Crypto** | ccxt 4.4.58, python-binance 1.0.18 |
 
 ---
 
@@ -90,12 +138,12 @@ El nombre es simbólico: mientras que la kryptonita es la debilidad de Superman,
 
 ### Requisitos Previos
 
-- Python 3.11+
+- Python 3.11.2+
 - SQLite 3
-- Node-RED (para automatización)
-- Cuenta en Binance (para datos de mercado)
-- API Key de Groq (para agente IA)
-- API Key de NewsAPI (para análisis de sentimiento)
+- Node-RED (opcional, para automatización vía Telegram)
+- Cuenta en Binance (para datos de mercado en tiempo real)
+- API Key de Groq (para agente IA conversacional)
+- API Key de NewsAPI (opcional, para análisis de sentimiento de noticias)
 
 ### Configuración
 
@@ -107,7 +155,7 @@ El nombre es simbólico: mientras que la kryptonita es la debilidad de Superman,
 
 2. **Crear entorno virtual**
    ```bash
-   python -m venv .venv
+   python3 -m venv .venv
    source .venv/bin/activate  # Linux/Mac
    # .venv\Scripts\activate   # Windows
    ```
@@ -142,10 +190,12 @@ El nombre es simbólico: mientras que la kryptonita es la debilidad de Superman,
 ### Iniciar la API
 
 ```bash
-python src/api.py
+python3 src/api.py
 ```
 
 La API estará disponible en: `http://localhost:5000`
+
+> **Nota:** Por defecto, la API Flask no requiere autenticación ya que está diseñada para uso interno vía Node-RED en entorno local.
 
 ### Endpoints Principales
 
@@ -193,20 +243,33 @@ curl -X POST http://localhost:5000/prompt \
 
 ---
 
-## 🤖 Agente IA
+## 🤖 Agente IA Conversacional
 
-El agente conversacional basado en LangChain permite:
+El agente inteligente está construido con **LangChain** y **Groq** (modelo llama-3.3-70b-versatile) y permite:
 
-- Consultas en lenguaje natural sobre tu portfolio
-- Análisis automático de datos históricos
-- Acceso a herramientas MCP para consultar la base de datos
-- Tracking de uso de tokens
+- **Consultas en lenguaje natural** sobre tu portfolio y operaciones
+- **Análisis automático** de datos históricos de criptomonedas
+- **Acceso directo a la base de datos** mediante herramientas MCP (Model Context Protocol)
+- **Tracking de uso de tokens** para control de costes
+- **Respuestas contextuales** basadas en datos reales en tiempo real
 
-**Herramientas disponibles:**
-- `listar_tablas_base_de_datos`
-- `obtener_esquema_tabla`
-- `consultar_base_de_datos`
-- `obtener_datos_tabla`
+### Herramientas MCP Disponibles
+
+El agente tiene acceso a las siguientes herramientas para consultar la base de datos:
+
+- `listar_tablas_base_de_datos` - Lista todas las tablas disponibles
+- `obtener_esquema_tabla` - Obtiene la estructura de una tabla específica
+- `consultar_base_de_datos` - Ejecuta consultas SQL personalizadas
+- `obtener_datos_tabla` - Recupera datos completos de una tabla
+
+### Ejemplos de Consultas
+
+```
+- "¿Cuánto he invertido en total en BTC?"
+- "¿Cuál es mi criptomoneda más rentable?"
+- "Muéstrame mis últimas 5 operaciones"
+- "¿Qué porcentaje de mi portfolio es ETH?"
+```
 
 ---
 
@@ -255,36 +318,63 @@ Prueba estrategias con datos históricos antes de operar:
 
 ```
 kryptonite/
-├── src/                    # Código fuente
-│   ├── ia/                 # Módulos de IA
-│   │   ├── grog_agente.py  # Agente LangChain
-│   │   └── mcp_sqlite_tools.py
-│   ├── api.py              # API Flask
-│   ├── database.py         # Gestión BD
-│   ├── analysis.py         # Análisis técnico
-│   ├── backtesting.py      # Motor de backtesting
-│   └── charts.py           # Gráficas
+├── src/                        # Código fuente principal
+│   ├── ia/                     # Módulos de Inteligencia Artificial
+│   │   ├── grog_agente.py      # Agente conversacional LangChain
+│   │   └── mcp_sqlite_tools.py # Herramientas MCP para consultar BD
+│   ├── api.py                  # API Flask (endpoints REST)
+│   ├── database.py             # Gestión de base de datos SQLite
+│   ├── analysis.py             # Análisis técnico y señales de trading
+│   ├── backtesting.py          # Motor de backtesting de estrategias
+│   └── charts.py               # Generación de gráficas
 │
-├── data/                   # Datos (no versionado)
-│   └── kryptonite.db       # Base de datos SQLite
+├── data/                       # Datos persistentes (no versionado)
+│   └── kryptonite.db           # Base de datos SQLite
 │
-├── documentacion/          # Documentación
-│   ├── project-overview.md
-│   └── roadmap-2025.md
+├── documentacion/              # Documentación del proyecto
+│   ├── project-overview.md     # Visión general del proyecto
+│   └── roadmap-2025.md         # Roadmap y planes futuros
 │
-├── logs/                   # Logs (no versionado)
-├── requirements.txt        # Dependencias Python
-└── README.md              # Este archivo
+├── logs/                       # Archivos de log (no versionado)
+│   └── kryptonite.log          # Log rotativo (max 5MB, 3 backups)
+│
+├── notebook/                   # Jupyter notebooks para análisis
+├── scripts/                    # Scripts auxiliares
+├── .venv/                      # Entorno virtual Python (no versionado)
+│
+├── parametros.env              # Variables de entorno (no versionado)
+├── parametros.env.example      # Plantilla de configuración
+├── requirements.txt            # Dependencias Python
+├── .gitignore                  # Archivos excluidos de git
+└── README.md                   # Este archivo
 ```
 
 ---
 
 ## 🔐 Seguridad
 
-- ✅ API keys en archivo `.env` (no versionado)
-- ✅ Base de datos con información personal (no versionada)
-- ✅ Logs rotativos (max 5 MB, 3 backups)
-- ⚠️ API Flask sin autenticación (uso interno via Node-RED)
+### Buenas Prácticas Implementadas
+
+- ✅ **API keys** almacenadas en `parametros.env` (excluido de git)
+- ✅ **Base de datos** con información personal en `data/` (no versionada)
+- ✅ **Logs rotativos** automáticos (max 5 MB, 3 backups)
+- ✅ **`.gitignore`** configurado para proteger datos sensibles
+- ⚠️ **API Flask** sin autenticación (diseñada para uso interno vía Node-RED)
+
+### Archivos Protegidos (.gitignore)
+
+```
+data/                    # Base de datos con operaciones reales
+logs/                    # Archivos de log
+parametros.env           # API keys y configuración
+.venv/                   # Entorno virtual
+__pycache__/            # Archivos compilados Python
+*.pyc
+*.db
+*.log
+```
+
+> **Importante:** La API Flask está pensada para ejecutarse en un entorno local seguro. Si necesitas exponerla públicamente, implementa autenticación (JWT, OAuth, etc.).
 
 ---
 
@@ -307,17 +397,21 @@ GROUP BY proveedor, modelo;
 
 ---
 
-## 🗺️ Roadmap
+## 🗺️ Roadmap 2025
 
-Ver [`documentacion/roadmap-2025.md`](documentacion/roadmap-2025.md) para planes futuros:
+Ver [documentacion/roadmap-2025.md](documentacion/roadmap-2025.md) para planes detallados.
 
-- ✨ Optimizador de portfolio inteligente
-- 🤖 Mejoras al agente IA (proactividad, historial)
-- 🔔 Sistema de alertas avanzadas con condiciones complejas
-- 📈 Análisis predictivo mejorado (ML)
-- 💼 Sistema de paper trading
-- 📊 Análisis multi-timeframe
-- 📄 Reportes automáticos en PDF
+### Próximas Funcionalidades
+
+- ✨ **Optimizador de portfolio** con rebalanceo inteligente
+- 🤖 **Mejoras al agente IA**: historial conversacional, proactividad
+- 🔔 **Sistema de alertas avanzadas** con condiciones combinadas (precio + volumen + indicadores)
+- 📈 **Análisis predictivo** mejorado con modelos de ML (LSTM, Random Forest)
+- 💼 **Paper trading** completo para probar estrategias sin riesgo
+- 📊 **Análisis multi-timeframe** (1m, 5m, 15m, 1h, 4h, 1d)
+- 📄 **Reportes automáticos** en PDF (diarios, semanales, mensuales)
+- 🌐 **Dashboard web** con React/Vue para visualización en tiempo real
+- 🔄 **Integración con múltiples exchanges** (Kraken, Coinbase, etc.)
 
 ---
 
@@ -340,32 +434,74 @@ curl http://localhost:5000/prompt/status
 
 ---
 
-## 📚 Referencias
+## 📚 Referencias y Documentación
 
-- [Binance API Docs](https://binance-docs.github.io/apidocs/)
-- [LangChain Docs](https://python.langchain.com/)
-- [Groq API](https://groq.com/)
-- [NewsAPI](https://newsapi.org/)
-- [pandas-ta](https://github.com/twopirllc/pandas-ta)
+### APIs y Servicios
+- [Binance API Documentation](https://binance-docs.github.io/apidocs/) - Documentación oficial de Binance
+- [Groq API](https://groq.com/) - LLM ultra-rápido para el agente IA
+- [NewsAPI](https://newsapi.org/) - API de noticias para análisis de sentimiento
+
+### Frameworks y Librerías
+- [LangChain Documentation](https://python.langchain.com/) - Framework para aplicaciones LLM
+- [LangGraph](https://langchain-ai.github.io/langgraph/) - Framework para agentes stateful
+- [pandas-ta](https://github.com/twopirllc/pandas-ta) - Indicadores técnicos para pandas
+- [Flask Documentation](https://flask.palletsprojects.com/) - Framework web Python
+- [ccxt](https://docs.ccxt.com/) - Biblioteca para conectar con exchanges
+
+### Machine Learning
+- [scikit-learn](https://scikit-learn.org/) - Machine Learning en Python
 
 ---
 
 ## 📝 Licencia
 
-Este proyecto es de uso personal y privado.
+Este proyecto es de **uso personal y privado**. No está licenciado para uso comercial o distribución pública.
 
 ---
 
 ## 👤 Autor
 
-**Buenos Días**
+**Antonio Cabello**
+- GitHub: [@acabellan1868-prog](https://github.com/acabellan1868-prog)
+- Proyecto: [Kryptonite](https://github.com/acabellan1868-prog/kryptonite)
 
 ---
 
 ## 🙏 Agradecimientos
 
-Desarrollado con la asistencia de Claude (Anthropic) para arquitectura, desarrollo y documentación.
+Este proyecto ha sido desarrollado con la asistencia de **Claude Code** (Anthropic) para:
+- Arquitectura del sistema
+- Desarrollo del código
+- Implementación del agente IA
+- Documentación técnica
+- Optimización y debugging
 
 ---
 
-**Última actualización:** Diciembre 2024
+## 🤝 Contribuciones
+
+Este es un proyecto personal y privado. No se aceptan contribuciones externas en este momento.
+
+---
+
+## 📞 Soporte
+
+Para reportar problemas o sugerencias:
+1. Abre un [Issue](https://github.com/acabellan1868-prog/kryptonite/issues) en GitHub
+2. Describe el problema o sugerencia de forma clara
+3. Incluye logs o capturas si es posible
+
+---
+
+## ⚠️ Disclaimer
+
+**Kryptonite** es una herramienta de análisis y **no constituye asesoramiento financiero**.
+
+- El trading de criptomonedas conlleva **riesgo de pérdida de capital**
+- Las decisiones de inversión son **responsabilidad exclusiva del usuario**
+- Los resultados de backtesting **no garantizan rendimientos futuros**
+- Usa este software bajo tu propio riesgo
+
+---
+
+**Última actualización:** Diciembre 2025
