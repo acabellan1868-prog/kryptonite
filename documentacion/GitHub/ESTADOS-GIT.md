@@ -4,6 +4,98 @@
 
 ---
 
+¡Perfecto! Aquí está el gráfico **completo** con todos los flujos (ida y vuelta):
+
+```
+╔════════════════════╗
+║ Working Directory  ║  ← Tus archivos normales (editas aquí)
+║  kryptonite.db     ║
+║  script.py         ║
+╚════════════════════╝
+         │     ↑
+         │     │ git restore <file>
+         │     │ (descartar cambios)
+         │     │
+         │ git add
+         │ (preparar)
+         ↓     │
+╔════════════════════╗
+║  Staging Area      ║  ← "Caja de preparación" (.git/index)
+║  (lo que irá al    ║
+║   próximo commit)  ║
+╚════════════════════╝
+         │     ↑
+         │     │ git restore --staged <file>
+         │     │ (sacar del staging)
+         │     │
+         │ git commit │ git reset --soft HEAD~1
+         │ (guardar)  │ (deshacer commit, mantener en staging)
+         ↓            │
+╔════════════════════╗
+║  Local Repository  ║  ← Historial local (.git/objects/)
+║  (commits locales) ║
+╚════════════════════╝
+         │     ↑
+         │     │ git reset --hard origin/main
+         │     │ (descartar commits locales)
+         │     │
+         │ git push   │ git pull / git fetch
+         │ (publicar) │ (descargar)
+         ↓            │
+╔════════════════════╗
+║  Remote (GitHub)   ║  ← La nube
+║  origin/main       ║
+╚════════════════════╝
+```
+
+## Tabla completa de comandos (ida y vuelta):
+
+| Desde → Hasta | Comando hacia adelante | Comando de retroceso |
+|---------------|------------------------|----------------------|
+| **Working → Staging** | `git add <file>` | `git restore --staged <file>` |
+| **Staging → Local Repo** | `git commit -m "msg"` | `git reset --soft HEAD~1` |
+| **Local Repo → GitHub** | `git push` | `git pull` (bajar cambios) |
+| **- → Working** | - | `git restore <file>` (descartar cambios no guardados) |
+| **GitHub → Working** | `git pull` | - |
+
+## Comandos de "emergencia" (resetear todo):
+
+```bash
+# Descartar TODO en Working Directory (¡cuidado!)
+git restore .
+
+# Sacar TODO del Staging
+git restore --staged .
+
+# Volver Local Repo a como está en GitHub (¡PELIGRO!)
+git reset --hard origin/main
+
+# Ver diferencias antes de decidir
+git diff              # Working vs Staging
+git diff --staged     # Staging vs último commit
+git diff origin/main  # Local vs GitHub
+```
+
+## Niveles de `git reset`:
+
+```bash
+git reset --soft HEAD~1   # Deshace commit, deja archivos en Staging
+git reset --mixed HEAD~1  # Deshace commit, deja archivos en Working (default)
+git reset --hard HEAD~1   # Deshace commit, BORRA cambios (¡peligro!)
+```
+
+## El flujo mental completo:
+
+```
+EDITAR → add → STAGING → commit → LOCAL → push → GITHUB
+   ↑       ↓      ↑         ↓       ↑       ↓       ↓
+   └─restore─┘    └─restore──┘      └──pull/reset──┘
+              --staged        --soft/hard
+```
+
+Ahora sí, ¿está completo para tu modelo mental? 🧠✨
+
+
 ## 📊 Diferencia Fundamental: Git vs SVN
 
 ### SVN (Centralizado)
