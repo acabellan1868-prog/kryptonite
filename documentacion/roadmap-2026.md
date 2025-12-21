@@ -549,7 +549,7 @@ Interfaz web con Plotly Dash o Streamlit.
 
 ## 🎯 Recomendación de Roadmap
 
-### Fase 1: Optimización de lo Existente (1-2 meses) ✅ **FASES 1.1 Y 1.3 COMPLETADAS**
+### Fase 1: Optimización de lo Existente (1-2 meses) ✅ **FASES 1.1, 1.2.1 Y 1.3 COMPLETADAS**
 1. **✅ Optimizador de Portfolio** ← **IMPLEMENTADO** (ver [fase-1.1-portfolio](implementacion_roadmap_2026/fase-1.1-portfolio/))
    - ✅ Cálculo de composición del portfolio (%)
    - ✅ Detección de alertas (sobreexposición, pérdidas severas)
@@ -558,7 +558,14 @@ Interfaz web con Plotly Dash o Streamlit.
    - ✅ Parámetros configurables en `parametros.env`
    - ✅ 100% retrocompatible
    - ✅ **NUEVO:** Detección de cambios desde última consulta (Fase 1.3) - [ver docs](implementacion_roadmap_2026/fase-1.3-cambios-portfolio/)
-2. **Mejoras al Agente IA** ← Aprovecha infraestructura existente (PENDIENTE)
+2. **✅ Mejoras al Agente IA (Fase 1.2.1)** ← **IMPLEMENTADO** (ver [fase-1.2-mejoras-agente-ia](implementacion_roadmap_2026/fase-1.2-mejoras-agente-ia/))
+   - ✅ Herramientas de análisis técnico (3 nuevas)
+   - ✅ Análisis de señales de trading automático
+   - ✅ Análisis de portfolio integrado
+   - ✅ Cálculo de rendimientos históricos
+   - ⏸️ Historial persistente (Fase 1.2.2 - Pendiente)
+   - ⏸️ Modo Experto/Principiante (Fase 1.2.3 - Pendiente)
+   - ⏸️ Recomendaciones Proactivas (Fase 1.2.4 - Pendiente)
 3. **Sistema de Alertas Avanzadas** ← Complementa Node-RED (PENDIENTE)
 
 ### Fase 2: Capacidades Predictivas (2-3 meses)
@@ -582,7 +589,7 @@ Interfaz web con Plotly Dash o Streamlit.
 |------|---------|-------------|---------------------|-----------|--------|
 | Optimizador Portfolio (Fase 1.1) | 🔥🔥🔥 | Media | ✅ Tabla operaciones | **ALTA** | ✅ **COMPLETADO** |
 | Detección Cambios Portfolio (Fase 1.3) | 🔥🔥 | Baja | ✅ Fase 1.1 | **ALTA** | ✅ **COMPLETADO** |
-| Mejoras Agente IA | 🔥🔥🔥 | Media-Alta | ✅ LangChain | **ALTA** | ⏸️ Pendiente |
+| Mejoras Agente IA (Fase 1.2.1) | 🔥🔥🔥 | Media-Alta | ✅ LangChain | **ALTA** | ✅ **COMPLETADO** |
 | Alertas Avanzadas | 🔥🔥 | Alta | ✅ Node-RED | **ALTA** | ⏸️ Pendiente |
 | Predictivo ML | 🔥🔥 | Media-Alta | ✅ Modelo RF | **MEDIA** | ⏸️ Pendiente |
 | Paper Trading | 🔥🔥 | Media | ⚠️ Nueva infra | **MEDIA** | ⏸️ Pendiente |
@@ -602,7 +609,16 @@ Interfaz web con Plotly Dash o Streamlit.
    - Detección de alertas
    - Endpoint `/portafolio?analisis=completo`
    - Documentación completa
-2. ✅ **Fase 1.3 - Detección de Cambios desde Última Consulta**
+
+2. ✅ **Fase 1.2.1 - Mejoras al Agente IA: Herramientas de Análisis**
+   - 3 nuevas herramientas MCP (análisis técnico)
+   - Señales de trading automáticas (COMPRA/VENTA/MANTENER)
+   - Análisis de portfolio integrado
+   - Rendimiento histórico por cripto
+   - Prompt del sistema mejorado
+   - Agente transformado de "consultor" a "asesor"
+
+3. ✅ **Fase 1.3 - Detección de Cambios desde Última Consulta**
    - Snapshots automáticos del portfolio
    - Comparación con estado anterior
    - Tiempo transcurrido formateado
@@ -613,9 +629,9 @@ Interfaz web con Plotly Dash o Streamlit.
 - Ninguna (esperando selección de siguiente fase)
 
 ### 📋 Siguiente Fase Sugerida
-**Opción 1:** Mejoras al Agente IA (aprovecha LangChain existente)
+**Opción 1:** Fase 1.2.2 - Historial Persistente del Agente IA
 **Opción 2:** Sistema de Alertas Avanzadas (complementa análisis de portfolio)
-**Opción 3:** Perfeccionar Fase 1.1 (añadir sugerencias de rebalanceo)
+**Opción 3:** Fase 1.2.3 - Modo Experto/Principiante para el Agente
 
 ---
 
