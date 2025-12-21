@@ -1,0 +1,14 @@
+-- database: ./kryptonite.db
+
+INSERT INTO operaciones (timestamp, cripto, moneda, tipo, cantidad, precio, valor_total, comision, origen)
+VALUES (
+    1734220260,           -- timestamp: 14 de diciembre de 2025 23:11 GMT convertido a UNIX timestamp
+    'BTC',                -- cripto
+    'EUR',                -- moneda
+    'Compra',             -- tipo
+    0.00066666,           -- cantidad
+    75000.0,              -- precio medio de ejecución
+    50.0,                 -- valor ejecutado
+    0.0,                  -- comisión (0 BTC)
+    'RevolutX'              -- origen (ajustar según corresponda: 'COINBASE', 'BINANCE', 'MANUAL', etc.)
+);

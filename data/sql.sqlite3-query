@@ -1,0 +1,65 @@
+-- database: ./kryptonite.db
+
+-- Devuelva la diferencia de precios entre dos lecturas consecutivas
+WITH Intervalos AS (
+    -- Definimos la variable como un CTE
+    SELECT 300 AS intervalo  -- 180 segundos (3 minutos)
+),
+Intervalos3Min AS (
+    SELECT
+        symbol,
+        price,
+        timestamp,
+        -- Usamos la variable intervalo para redondear el timestamp al inicio de cada intervalo
+        (timestamp / (SELECT intervalo FROM Intervalos)) * (SELECT intervalo FROM Intervalos) AS timestamp_intervalo,
+        ROW_NUMBER() OVER (PARTITION BY symbol, (timestamp / (SELECT intervalo FROM Intervalos)) ORDER BY timestamp) AS rn
+    FROM crypto_data
+    WHERE symbol = 'BTC'
+)
+SELECT 
+    c1.timestamp_intervalo, 
+    -- Hora de inicio del intervalo
+    datetime(c1.timestamp_intervalo, 'unixepoch', 'localtime') AS inicio_intervalo, 
+    -- Hora de fin del intervalo (sumamos el valor del intervalo)
+    datetime(c1.timestamp_intervalo + (SELECT intervalo FROM Intervalos), 'unixepoch', 'localtime') AS fin_intervalo, 
+    c1.symbol, 
+    c1.price AS precio_actual, 
+    c2.price AS precio_anterior, 
+    ROUND(((c1.price - c2.price) / c2.price) * 100, 2) AS variacion_porcentual
+FROM Intervalos3Min c1
+JOIN Intervalos3Min c2 
+    ON c1.symbol = c2.symbol 
+    AND c1.timestamp_intervalo = c2.timestamp_intervalo + (SELECT intervalo FROM Intervalos)  -- Comparamos bloques del intervalo
+    AND c1.rn = 1  -- Solo tomamos el primer registro de cada intervalo
+    AND c2.rn = 1  -- Solo tomamos el primer registro de cada intervalo
+ORDER BY inicio_intervalo DESC;
+
+
+
+
+
+
+-- ELIMINA los registros anteriores a  una fecha
+DELETE FROM crypto_data
+WHERE timestamp < strftime('%s', '2025-03-01 00:00:00');
+
+-- Consulta cuantos registros hay anteriores a una fecha
+SELECT COUNT(*) 
+FROM crypto_data 
+WHERE timestamp < strftime('%s', '2025-03-01 00:00:00');
+
+-- Devuelve la primera y ultima fecha de los valores que hay para una cripto
+SELECT 
+    symbol, 
+    COUNT(*) AS total_registros,
+    MIN(timestamp) AS min_timestamp, 
+    datetime(MIN(timestamp), 'unixepoch', 'localtime') AS min_fecha,
+    MAX(timestamp) AS max_timestamp, 
+    datetime(MAX(timestamp), 'unixepoch', 'localtime') AS max_fecha
+FROM crypto_data
+WHERE symbol = 'BTC';
+
+
+
+
+

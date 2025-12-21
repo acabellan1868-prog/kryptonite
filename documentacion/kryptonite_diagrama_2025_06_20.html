@@ -1,0 +1,120 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Diagrama Kryptonite</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <h2>Diagrama de Dependencias - Proyecto Kryptonite</h2>
+    <pre class="mermaid">
+
+flowchart LR
+    %% --- Subgraph del Proyecto Kryptonite ---
+    subgraph Proyecto_Kryptonite_src
+        direction TB
+
+        %% --- Clase Principal ---
+        subgraph Modelos_modelos_py
+            CriptoEnCartera["CriptoEnCartera (Clase)\n+ simbolo: str\n- float _precio_actual_cache\n- float _cantidad_total_cache\n- float _coste_total_inversion_cache\n+ float cantidad_total\n+ float coste_total_inversion\n+ float precio_actual\n+ float precio_medio_compra\n+ float valor_actual_inversion\n+ float rentabilidad\n- void _cargar_datos_operaciones_si_necesario()\n+ void refrescar_precio_actual()\n+ void refrescar_datos_operaciones()\n+ void refrescar_todo()\n+ dict a_dict()"]
+        end
+
+        %% --- Módulos del Proyecto ---
+        API["api.py\n(Endpoints Flask)\nUsa: Flask, Requests"]
+        Main["main.py\n(Lógica Principal Fetch)\nUsa: Pandas, Datetime"]
+        AnalisisRendimiento["analisis_rendimineto.py\n(Cálculo Rendimiento)"]
+        Analysis["analysis.py\n(Análisis Técnico)\nUsa: Pandas, SQLite3"]
+        Charts["charts.py\n(Generación Gráficas)\nUsa: Matplotlib, Plotly, Pandas"]
+        Database["database.py\n(Acceso DB)\nUsa: SQLite3, Pandas"]
+        BinanceData["binance_data.py\n(Acceso API Binance)\nUsa: CCXT, Pandas"]
+        ConfigModule["config.py\n(Configuración, Logger)\nUsa: Logging"]
+    end
+
+    %% --- Librerías Externas Principales (como referencia) ---
+    subgraph Librerias_Externas_Clave
+        direction LR
+        ExtFlask["Flask"]
+        ExtCCXT["CCXT"]
+        ExtSQLite3["SQLite3"]
+        ExtPandas["Pandas"]
+        ExtMatplotlib["Matplotlib"]
+        ExtPlotly["Plotly"]
+        ExtLogging["Logging"]
+        ExtDataclasses["Dataclasses"]
+        ExtRequests["Requests"]
+    end
+
+    %% === Interdependencias dentro de Kryptonite ===
+    CriptoEnCartera --> Database
+    CriptoEnCartera --> BinanceData
+    CriptoEnCartera --> ConfigModule
+    CriptoEnCartera -.-> ExtDataclasses
+
+    API --> Main
+    API --> ConfigModule
+    API --> Database
+    API --> Charts
+    API -.-> ExtFlask
+    API -.-> ExtRequests
+
+    Main --> Database
+    Main --> ConfigModule
+    Main --> BinanceData
+    Main -.-> ExtPandas
+
+    AnalisisRendimiento --> ConfigModule
+    AnalisisRendimiento --> Database
+    AnalisisRendimiento --> CriptoEnCartera
+
+    Analysis --> ConfigModule
+    Analysis --> Database
+    Analysis -.-> ExtPandas
+    Analysis -.-> ExtSQLite3
+
+    Charts --> ConfigModule
+    Charts --> Database
+    Charts --> Analysis
+    Charts -.-> ExtMatplotlib
+    Charts -.-> ExtPlotly
+    Charts -.-> ExtPandas
+
+    Database --> ConfigModule
+    Database --> BinanceData
+    Database -.-> ExtSQLite3
+    Database -.-> ExtPandas
+
+    BinanceData --> ConfigModule
+    BinanceData -.-> ExtCCXT
+    BinanceData -.-> ExtPandas
+    BinanceData -.-> ExtSQLite3
+    %% para get_moving_average_from_db
+
+    ConfigModule -.-> ExtLogging
+
+    %% Estilos
+    style CriptoEnCartera fill:#C1E1C1,stroke:#508D4E,stroke-width:2px,color:#000000
+    style API fill:#AEC6CF,stroke:#4A6F8A,stroke-width:1px,color:#000000
+    style Main fill:#AEC6CF,stroke:#4A6F8A,stroke-width:1px,color:#000000
+    style AnalisisRendimiento fill:#BCA9F5,stroke:#7851A9,stroke-width:1px,color:#000000
+    style Analysis fill:#FFDAB9,stroke:#E88438,stroke-width:1px,color:#000000
+    style Charts fill:#FFB6C1,stroke:#D87093,stroke-width:1px,color:#000000
+    style Database fill:#C1E1C1,stroke:#508D4E,stroke-width:1px,color:#000000
+    style BinanceData fill:#BCA9F5,stroke:#7851A9,stroke-width:1px,color:#000000
+    style ConfigModule fill:#E0E0E0,stroke:#5A5A5A,stroke-width:1px,color:#000000
+
+    classDef extLib fill:#D8BFD8,stroke:#8A2BE2,stroke-width:1px,color:#000000;
+    class ExtFlask,ExtCCXT,ExtSQLite3,ExtPandas,ExtMatplotlib,ExtPlotly,ExtLogging,ExtDataclasses,ExtRequests extLib;
+
+    </pre>
+</body>
+</html>

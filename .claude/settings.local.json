@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl:*)",
+      "Bash(timeout 3 curl:*)",
+      "Bash(python3:*)"
+    ]
+  }
+}

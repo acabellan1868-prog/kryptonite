@@ -1,0 +1,32 @@
+cat > .gitignore << 'EOF'
+# Entorno virtual
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Variables de entorno (CRÍTICO - API KEYS)
+parametros.env
+.env
+
+# Base de datos (185 MB - demasiado grande)
+data/kryptonite.db
+*.db
+
+# Logs
+logs/
+*.log
+
+# Modelos entrenados
+*.joblib
+*.pkl
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Temporales
+*.tmp
+*.bak
+.DS_Store
+EOF
