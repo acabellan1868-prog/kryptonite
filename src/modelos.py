@@ -14,6 +14,9 @@ class CriptoEnCartera:
     # Cachés internas para los datos fundamentales
     _precio_actual_cache: float | None = field(default=None, init=False, repr=False)
     _cantidad_total_cache: float | None = field(default=None, init=False, repr=False)
+    _cantidad_inversion_cache: float | None = field(default=None, init=False, repr=False)
+    _cantidad_recompensas_cache: float | None = field(default=None, init=False, repr=False)
+    _cantidad_recepciones_cache: float | None = field(default=None, init=False, repr=False)
     _coste_total_inversion_cache: float | None = field(default=None, init=False, repr=False)
 
     def _cargar_datos_operaciones_si_necesario(self):
@@ -25,13 +28,21 @@ class CriptoEnCartera:
             logger.info(f"Cachés de operaciones vacías para {self.simbolo}. Obteniendo de BD...")
             try:
                 datos_posicion = calcular_posicion_actual(self.simbolo)
-                self._cantidad_total_cache = datos_posicion.get('cantidad_actual', 0.0)
+                self._cantidad_inversion_cache = datos_posicion.get('cantidad_actual', 0.0)
+                self._cantidad_recompensas_cache = datos_posicion.get('cantidad_recompensas', 0.0)
+                self._cantidad_recepciones_cache = datos_posicion.get('cantidad_recepciones', 0.0)
+                self._cantidad_total_cache = datos_posicion.get('cantidad_total', 0.0)
                 self._coste_total_inversion_cache = datos_posicion.get('coste_total', 0.0)
                 logger.info(
                     f"Datos de operaciones para {self.simbolo} obtenidos y cacheados: "
-                    f"Cantidad={self._cantidad_total_cache}, Coste={self._coste_total_inversion_cache}"
+                    f"Inversión={self._cantidad_inversion_cache}, Recompensas={self._cantidad_recompensas_cache}, "
+                    f"Recepciones={self._cantidad_recepciones_cache}, Total={self._cantidad_total_cache}, "
+                    f"Coste={self._coste_total_inversion_cache}"
                 )
             except Exception as e:
+                self._cantidad_inversion_cache = 0.0
+                self._cantidad_recompensas_cache = 0.0
+                self._cantidad_recepciones_cache = 0.0
                 self._cantidad_total_cache = 0.0
                 self._coste_total_inversion_cache = 0.0
                 logger.error(
@@ -42,11 +53,40 @@ class CriptoEnCartera:
     @property
     def cantidad_total(self) -> float:
         """
-        Cantidad total actual de la criptomoneda, obtenida de la base de datos (tabla operaciones).
+        Cantidad total actual de la criptomoneda (inversión + recompensas + recepciones).
+        Obtenida de la base de datos (tabla operaciones).
         Se cachea después de la primera lectura.
         """
         self._cargar_datos_operaciones_si_necesario()
         return self._cantidad_total_cache if self._cantidad_total_cache is not None else 0.0
+
+    @property
+    def cantidad_inversion(self) -> float:
+        """
+        Cantidad de criptomoneda obtenida únicamente por compras (descontando ventas/envíos).
+        No incluye recompensas ni recepciones.
+        Se cachea después de la primera lectura.
+        """
+        self._cargar_datos_operaciones_si_necesario()
+        return self._cantidad_inversion_cache if self._cantidad_inversion_cache is not None else 0.0
+
+    @property
+    def cantidad_recompensas(self) -> float:
+        """
+        Cantidad de criptomoneda obtenida por recompensas de staking, airdrops, etc.
+        Se cachea después de la primera lectura.
+        """
+        self._cargar_datos_operaciones_si_necesario()
+        return self._cantidad_recompensas_cache if self._cantidad_recompensas_cache is not None else 0.0
+
+    @property
+    def cantidad_recepciones(self) -> float:
+        """
+        Cantidad de criptomoneda obtenida por recepciones (transferencias entrantes).
+        Se cachea después de la primera lectura.
+        """
+        self._cargar_datos_operaciones_si_necesario()
+        return self._cantidad_recepciones_cache if self._cantidad_recepciones_cache is not None else 0.0
 
     @property
     def coste_total_inversion(self) -> float:
@@ -93,8 +133,11 @@ class CriptoEnCartera:
         """Fuerza la actualización de cantidad y coste desde la base de datos."""
         logger.info(f"Refrescando datos de operaciones para {self.simbolo} (invalidando cachés).")
         self._cantidad_total_cache = None
+        self._cantidad_inversion_cache = None
+        self._cantidad_recompensas_cache = None
+        self._cantidad_recepciones_cache = None
         self._coste_total_inversion_cache = None
-        # La próxima vez que se acceda a cantidad_total o coste_total_inversion, se recargarán.
+        # La próxima vez que se acceda a las propiedades, se recargarán.
 
     def refrescar_todo(self) -> None:
         """Fuerza la actualización de todos los datos cacheados (precio y operaciones)."""
@@ -104,9 +147,13 @@ class CriptoEnCartera:
 
     @property
     def precio_medio_compra(self) -> float:
-        """Precio medio de compra por unidad."""
-        # Accede a las propiedades que ahora gestionan su propia carga y caché
-        cantidad = self.cantidad_total
+        """
+        Precio medio de compra por unidad.
+        Se calcula SOLO sobre la cantidad de inversión (compras/ventas),
+        NO incluye recompensas ni recepciones para mantener la integridad del precio medio.
+        """
+        # Usa cantidad_inversion en lugar de cantidad_total
+        cantidad = self.cantidad_inversion
         coste = self.coste_total_inversion
         if cantidad > 0:
             return coste / cantidad
@@ -146,6 +193,9 @@ class CriptoEnCartera:
         """
         return {
             "simbolo": self.simbolo,
+            "cantidad_inversion": self.cantidad_inversion,
+            "cantidad_recompensas": self.cantidad_recompensas,
+            "cantidad_recepciones": self.cantidad_recepciones,
             "cantidad_total": self.cantidad_total,
             "coste_total_inversion": self.coste_total_inversion,
             "precio_actual": self.precio_actual,

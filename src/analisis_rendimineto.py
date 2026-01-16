@@ -21,15 +21,21 @@ def calcular_rendimiento_criptomoneda(simbolo_criptomoneda: str):
 
         # Accedemos a las propiedades de CriptoEnCartera.
         # Estas propiedades tienen su propia lógica de caché y obtención de datos.
-        cantidad_actual = cripto.cantidad_total
-        
+        cantidad_total = cripto.cantidad_total
+        cantidad_inversion = cripto.cantidad_inversion
+        cantidad_recompensas = cripto.cantidad_recompensas
+        cantidad_recepciones = cripto.cantidad_recepciones
+
         # Si no hay cantidad, significa que no hay tenencias o no hay operaciones.
         # Usamos <= 0 para cubrir el caso de 0 exacto o pequeños residuales negativos si fuera posible.
-        if cantidad_actual <= 0:
+        if cantidad_total <= 0:
             logger.info(f"No hay tenencias actuales para {simbolo_criptomoneda} o no hay operaciones registradas.")
             return {
                 "simbolo": simbolo_criptomoneda,
-                "cantidad_actual": 0.0,
+                "cantidad_inversion": 0.0,
+                "cantidad_recompensas": 0.0,
+                "cantidad_recepciones": 0.0,
+                "cantidad_total": 0.0,
                 "precio_medio_compra": 0.0,
                 "coste_total_inversion": 0.0,
                 "precio_actual": cripto.precio_actual, # Puede tener precio aunque no haya tenencias
@@ -41,22 +47,25 @@ def calcular_rendimiento_criptomoneda(simbolo_criptomoneda: str):
         # Obtenemos el coste total de la inversión y el precio medio de compra de las tenencias actuales.
         # Estos valores ya están calculados por CriptoEnCartera basándose en la tabla 'operaciones'.
         coste_total_inversion = cripto.coste_total_inversion
-        precio_medio_compra = cripto.precio_medio_compra # coste_total_inversion / cantidad_total
+        precio_medio_compra = cripto.precio_medio_compra # coste_total_inversion / cantidad_inversion (NO incluye recompensas)
 
         # Obtenemos el precio actual de mercado y el valor actual de la inversión.
         precio_actual = cripto.precio_actual
         valor_actual_inversion = cripto.valor_actual_inversion # precio_actual * cantidad_total
 
         # La rentabilidad porcentual ya la calcula CriptoEnCartera.
-        rentabilidad_porcentaje = cripto.rentabilidad 
-        
+        rentabilidad_porcentaje = cripto.rentabilidad
+
         # Calculamos la ganancia o pérdida absoluta.
         ganancia_perdida_abs = valor_actual_inversion - coste_total_inversion
 
         # Preparamos el diccionario de resultados con nombres de claves consistentes.
         datos_rendimiento = {
             "simbolo": simbolo_criptomoneda,
-            "cantidad_actual": round(cantidad_actual, 8),
+            "cantidad_inversion": round(cantidad_inversion, 8),
+            "cantidad_recompensas": round(cantidad_recompensas, 8),
+            "cantidad_recepciones": round(cantidad_recepciones, 8),
+            "cantidad_total": round(cantidad_total, 8),
             "precio_medio_compra": round(precio_medio_compra, 8),
             "coste_total_inversion": round(coste_total_inversion, 2),
             "precio_actual": round(precio_actual, 8),
@@ -72,7 +81,10 @@ def calcular_rendimiento_criptomoneda(simbolo_criptomoneda: str):
         # Retornar un diccionario con valores por defecto en caso de error
         return {
             "simbolo": simbolo_criptomoneda,
-            "cantidad_actual": 0.0,
+            "cantidad_inversion": 0.0,
+            "cantidad_recompensas": 0.0,
+            "cantidad_recepciones": 0.0,
+            "cantidad_total": 0.0,
             "precio_medio_compra": 0.0,
             "coste_total_inversion": 0.0,
             # Intentar obtener el precio actual incluso en error, si es posible, o default a 0

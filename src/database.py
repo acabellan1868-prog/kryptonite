@@ -423,7 +423,11 @@ def datos_comparados(monedas):
 def calcular_posicion_actual(simbolo: str):
     """
     Calcula la posición actual de una criptomoneda basándose en la tabla 'operaciones'.
-    Devuelve cantidad actual, coste total neto y coste medio.
+    Devuelve cantidad de inversión, cantidad de recompensas, coste total neto y coste medio.
+
+    La cantidad de inversión solo incluye compras/ventas/envíos.
+    Las recompensas (staking, airdrops, etc.) se trackean por separado para mantener
+    la integridad del precio medio de compra.
     """
     conexion = sqlite3.connect(DB_PATH)
     cursor = conexion.cursor()
@@ -439,7 +443,9 @@ def calcular_posicion_actual(simbolo: str):
     operaciones = cursor.fetchall()
     conexion.close()
 
-    cantidad_total = 0.0
+    cantidad_inversion = 0.0  # Solo compras/ventas/envíos
+    cantidad_recompensas = 0.0  # Recompensas de staking, airdrops, etc.
+    cantidad_recepciones = 0.0  # Recepciones (transferencias entrantes)
     coste_total = 0.0
 
     for tipo, cantidad, valor_total, comision in operaciones:
@@ -447,29 +453,39 @@ def calcular_posicion_actual(simbolo: str):
         comision_actual = comision if comision is not None else 0.0
 
         if tipo_lower == "compra":
-            cantidad_total += cantidad
+            cantidad_inversion += cantidad
             coste_total += valor_total + comision_actual
         elif tipo_lower in ["venta", "envío", "envio"]:
             # Para ventas o envíos, reducimos el coste total proporcionalmente a la cantidad vendida/enviada (método del coste medio).
             coste_medio_unitario = 0
-            if cantidad_total > 0:
-                coste_medio_unitario = coste_total / cantidad_total
-            
+            if cantidad_inversion > 0:
+                coste_medio_unitario = coste_total / cantidad_inversion
+
             coste_a_reducir = cantidad * coste_medio_unitario
             coste_total -= coste_a_reducir
-            cantidad_total -= cantidad
+            cantidad_inversion -= cantidad
         elif tipo_lower == "recepción":
-            cantidad_total += cantidad
-            # El coste total no se modifica para recepciones "gratuitas", lo que diluye el coste medio.
+            cantidad_recepciones += cantidad
+            # El coste total no se modifica para recepciones "gratuitas"
+        elif tipo_lower == "recompensa":
+            cantidad_recompensas += cantidad
+            # El coste total no se modifica para recompensas (staking, etc.)
 
-    if cantidad_total != 0:
-        coste_medio = coste_total / cantidad_total if cantidad_total > 0 else 0.0 # Evitar división por cero si cantidad_total es negativo
+    # Calcular coste medio solo basado en la inversión real
+    if cantidad_inversion > 0:
+        coste_medio = coste_total / cantidad_inversion
     else:
         coste_medio = 0.0
 
+    # Cantidad total es la suma de todas las fuentes
+    cantidad_total = cantidad_inversion + cantidad_recompensas + cantidad_recepciones
+
     return {
         "cripto": simbolo.upper(),
-        "cantidad_actual": round(cantidad_total, 8),
+        "cantidad_actual": round(cantidad_inversion, 8),  # Solo inversión (compras/ventas)
+        "cantidad_recompensas": round(cantidad_recompensas, 8),  # Recompensas de staking
+        "cantidad_recepciones": round(cantidad_recepciones, 8),  # Recepciones/transferencias
+        "cantidad_total": round(cantidad_total, 8),  # Suma total
         "coste_total": round(coste_total, 2),
         "coste_medio": round(coste_medio, 2)
     }
