@@ -270,6 +270,186 @@ def cambio_porcentual_volumen(simbolo: str, intervalo_ventana_minutos: int = 30,
     }
 
 ####################################################################
+#  calcular_presion_compradora (OBV Simplificado)
+####################################################################
+
+def calcular_presion_compradora(simbolo: str, ventana_minutos: int = 60) -> dict:
+    """
+    Calcula la presión compradora vs vendedora usando OBV simplificado.
+
+    Lógica:
+    - Si precio sube respecto al minuto anterior → volumen se suma a "compradores"
+    - Si precio baja respecto al minuto anterior → volumen se suma a "vendedores"
+
+    Args:
+        simbolo (str): Símbolo de la criptomoneda (ej. 'BTC').
+        ventana_minutos (int): Período en minutos para analizar (default: 60).
+
+    Returns:
+        dict: {
+            'simbolo': 'BTC',
+            'volumen_compra': 5.2,
+            'volumen_venta': 3.8,
+            'presion_compradora_pct': 57.8,
+            'presion_vendedora_pct': 42.2,
+            'interpretacion': 'LIGERA_PRESION_COMPRADORA'
+        }
+    """
+    # Obtener datos suficientes para el análisis
+    # Pedimos el doble de registros para asegurar cobertura completa
+    datos = get_data_from_db(simbolo, window=ventana_minutos * 2)
+
+    # Validar datos
+    if datos is None or not datos['prices'] or len(datos['prices']) < 2:
+        logger.warning(f"Datos insuficientes para calcular presión compradora de {simbolo}.")
+        return {
+            'simbolo': simbolo,
+            'volumen_compra': None,
+            'volumen_venta': None,
+            'presion_compradora_pct': None,
+            'presion_vendedora_pct': None,
+            'interpretacion': 'DATOS_INSUFICIENTES'
+        }
+
+    # Crear DataFrame
+    df = pd.DataFrame({
+        'timestamp': datos['timestamps'],
+        'price': datos['prices'],
+        'volume': datos['volumes']
+    }).sort_values(by='timestamp', ascending=True).drop_duplicates(subset=['timestamp'], keep='last')
+
+    if len(df) < 2:
+        logger.warning(f"Datos insuficientes después de limpiar duplicados para {simbolo}.")
+        return {
+            'simbolo': simbolo,
+            'volumen_compra': None,
+            'volumen_venta': None,
+            'presion_compradora_pct': None,
+            'presion_vendedora_pct': None,
+            'interpretacion': 'DATOS_INSUFICIENTES'
+        }
+
+    # Filtrar solo los últimos N minutos
+    timestamp_mas_reciente = df['timestamp'].iloc[-1]
+    timestamp_inicio = timestamp_mas_reciente - (ventana_minutos * 60)
+    df = df[df['timestamp'] > timestamp_inicio]
+
+    if len(df) < 2:
+        logger.warning(f"Datos insuficientes en la ventana de {ventana_minutos} min para {simbolo}.")
+        return {
+            'simbolo': simbolo,
+            'volumen_compra': None,
+            'volumen_venta': None,
+            'presion_compradora_pct': None,
+            'presion_vendedora_pct': None,
+            'interpretacion': 'DATOS_INSUFICIENTES'
+        }
+
+    # Calcular presión compradora/vendedora
+    volumen_compra = 0.0
+    volumen_venta = 0.0
+    volumen_sin_cambio = 0.0
+    minutos_subida = 0
+    minutos_bajada = 0
+    minutos_sin_cambio = 0
+
+    prices = df['price'].tolist()
+    volumes = df['volume'].tolist()
+
+    for i in range(1, len(prices)):
+        if prices[i] > prices[i-1]:
+            # Precio subió → presión compradora
+            volumen_compra += volumes[i]
+            minutos_subida += 1
+        elif prices[i] < prices[i-1]:
+            # Precio bajó → presión vendedora
+            volumen_venta += volumes[i]
+            minutos_bajada += 1
+        else:
+            # Precio igual → sin cambio
+            volumen_sin_cambio += volumes[i]
+            minutos_sin_cambio += 1
+
+    total = volumen_compra + volumen_venta
+
+    if total == 0:
+        presion_compradora_pct = 50.0
+        presion_vendedora_pct = 50.0
+    else:
+        presion_compradora_pct = (volumen_compra / total) * 100
+        presion_vendedora_pct = (volumen_venta / total) * 100
+
+    # Determinar interpretación
+    if presion_compradora_pct >= 70:
+        interpretacion = 'DOMINIO_COMPRADOR_FUERTE'
+    elif presion_compradora_pct >= 50:
+        interpretacion = 'LIGERA_PRESION_COMPRADORA'
+    elif presion_compradora_pct >= 30:
+        interpretacion = 'LIGERA_PRESION_VENDEDORA'
+    else:
+        interpretacion = 'DOMINIO_VENDEDOR_FUERTE'
+
+    logger.info(f"Presión compradora {simbolo} ({ventana_minutos}min): {presion_compradora_pct:.1f}% compra, {presion_vendedora_pct:.1f}% venta → {interpretacion}")
+    logger.info(f"Desglose minutos: {minutos_subida} subida, {minutos_bajada} bajada, {minutos_sin_cambio} sin cambio")
+
+    return {
+        'simbolo': simbolo,
+        'volumen_compra': round(volumen_compra, 5),
+        'volumen_venta': round(volumen_venta, 5),
+        'volumen_sin_cambio': round(volumen_sin_cambio, 5),
+        'minutos_subida': minutos_subida,
+        'minutos_bajada': minutos_bajada,
+        'minutos_sin_cambio': minutos_sin_cambio,
+        'presion_compradora_pct': round(presion_compradora_pct, 1),
+        'presion_vendedora_pct': round(presion_vendedora_pct, 1),
+        'interpretacion': interpretacion
+    }
+
+
+def generar_conclusion_senal(senal: str, presion_compradora_pct: float) -> str:
+    """
+    Genera una conclusión automática basada en la señal y la presión compradora.
+
+    Args:
+        senal (str): COMPRA, VENTA o MANTENER
+        presion_compradora_pct (float): Porcentaje de presión compradora (0-100)
+
+    Returns:
+        str: Conclusión descriptiva para mostrar al usuario
+    """
+    if presion_compradora_pct is None:
+        return "Sin datos de presión para analizar."
+
+    if senal == 'COMPRA':
+        if presion_compradora_pct >= 70:
+            return "COMPRA CONFIRMADA. Caída con fuerte presión compradora. Rebote muy probable."
+        elif presion_compradora_pct >= 50:
+            return "COMPRA con cautela. Ligera presión compradora. Rebote posible."
+        elif presion_compradora_pct >= 30:
+            return "ESPERAR. Señal de compra débil con presión vendedora."
+        else:
+            return "NO COMPRAR. Fuerte presión vendedora. Puede seguir cayendo."
+
+    elif senal == 'VENTA':
+        if presion_compradora_pct <= 30:
+            return "VENTA CONFIRMADA. Subida con fuerte presión vendedora. Corrección probable."
+        elif presion_compradora_pct <= 50:
+            return "VENTA con cautela. Ligera presión vendedora. Corrección posible."
+        elif presion_compradora_pct <= 70:
+            return "ESPERAR. Señal de venta débil con presión compradora."
+        else:
+            return "NO VENDER. Rally genuino con fuerte presión compradora."
+
+    else:  # MANTENER
+        if presion_compradora_pct >= 60:
+            return "Mercado lateral con presión compradora. Posible subida próxima."
+        elif presion_compradora_pct <= 40:
+            return "Mercado lateral con presión vendedora. Posible bajada próxima."
+        else:
+            return "Mercado lateral equilibrado. Sin señales claras."
+
+
+####################################################################
 #  analizar_tendencia_previa
 ####################################################################
 
@@ -368,6 +548,16 @@ def obtener_senal_cambio_extremo(
         'volumen_promedio_historico': None,
         'cambio_porcentual_volumen': None,
         'volumen_confirmado': None,
+        'volumen_compra': None,
+        'volumen_venta': None,
+        'volumen_sin_cambio': None,
+        'minutos_subida': None,
+        'minutos_bajada': None,
+        'minutos_sin_cambio': None,
+        'presion_compradora_pct': None,
+        'presion_vendedora_pct': None,
+        'interpretacion_presion': None,
+        'conclusion': None,
         'senal': 'MANTENER'
     }
     cambio_porcentual = resultado['cambio_porcentual']
@@ -391,10 +581,25 @@ def obtener_senal_cambio_extremo(
     resultado['volumen_promedio_historico'] = analisis_volumen.get('volumen_promedio_historico')
     resultado['cambio_porcentual_volumen'] = cambio_volumen
 
+    # SIEMPRE calculamos la presión compradora (para mostrarlo)
+    logger.info(f"Analizando presión compradora para {simbolo}...")
+    presion = calcular_presion_compradora(simbolo, intervalo_minutos)
+    resultado['volumen_compra'] = presion.get('volumen_compra')
+    resultado['volumen_venta'] = presion.get('volumen_venta')
+    resultado['volumen_sin_cambio'] = presion.get('volumen_sin_cambio')
+    resultado['minutos_subida'] = presion.get('minutos_subida')
+    resultado['minutos_bajada'] = presion.get('minutos_bajada')
+    resultado['minutos_sin_cambio'] = presion.get('minutos_sin_cambio')
+    resultado['presion_compradora_pct'] = presion.get('presion_compradora_pct')
+    resultado['presion_vendedora_pct'] = presion.get('presion_vendedora_pct')
+    resultado['interpretacion_presion'] = presion.get('interpretacion')
+
     # Si no se requiere confirmación de volumen, devolvemos la señal de precio directamente
     if not confirmar_con_volumen:
         resultado['senal'] = senal_precio
         resultado['volumen_confirmado'] = None
+        # Generar conclusión basada en señal + presión
+        resultado['conclusion'] = generar_conclusion_senal(senal_precio, resultado['presion_compradora_pct'])
         logger.info(f"Señal para {simbolo}: Precio actual={resultado['precio_actual']:.2f}, Precio anterior={resultado['precio_anterior']:.2f}, Cambio={cambio_porcentual:.2f}%, Señal={resultado['senal']} (sin confirmación de volumen)")
         return resultado
 
@@ -402,6 +607,7 @@ def obtener_senal_cambio_extremo(
     if senal_precio == "MANTENER":
         resultado['senal'] = senal_precio
         resultado['volumen_confirmado'] = None
+        resultado['conclusion'] = generar_conclusion_senal(senal_precio, resultado['presion_compradora_pct'])
         logger.info(f"Señal para {simbolo}: MANTENER (cambio {cambio_porcentual:.2f}% no supera umbral {umbral_porcentual}%)")
         return resultado
 
@@ -421,6 +627,9 @@ def obtener_senal_cambio_extremo(
         resultado['volumen_confirmado'] = False
         resultado['senal'] = 'MANTENER' # No hay confirmación, revertimos a MANTENER
         logger.info(f"Volumen NO confirmado para {simbolo}. Cambio vol: {cambio_volumen:.2f}% < {umbral_porcentual_volumen}%. Señal revertida a MANTENER.")
+
+    # Generar conclusión basada en señal final + presión
+    resultado['conclusion'] = generar_conclusion_senal(resultado['senal'], resultado['presion_compradora_pct'])
 
     return resultado
 
