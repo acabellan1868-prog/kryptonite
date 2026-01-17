@@ -461,7 +461,7 @@ Este proyecto es de **uso personal y privado**. No está licenciado para uso com
 
 ## 👤 Autor
 
-**Antonio Cabello**
+**Antonio Cristóbal Álvarez Abellán**
 - GitHub: [@acabellan1868-prog](https://github.com/acabellan1868-prog)
 - Proyecto: [Kryptonite](https://github.com/acabellan1868-prog/kryptonite)
 

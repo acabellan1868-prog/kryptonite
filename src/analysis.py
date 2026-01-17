@@ -199,12 +199,12 @@ def cambio_porcentual_volumen(simbolo: str, intervalo_ventana_minutos: int = 30,
         logger.warning(f"Datos insuficientes después de eliminar duplicados para {simbolo}.")
         return {'simbolo': simbolo, 'volumen_total_actual': None, 'volumen_promedio_historico': None, 'cambio_porcentual_volumen': None}
 
-    # Convertir timestamp a datetime
+    # Convertir timestamp a datetime y ordenar
     df['datetime'] = pd.to_datetime(df['timestamp'], unit='s')
-    df = df.set_index('datetime')
+    df = df.sort_values('timestamp', ascending=True)
 
     # Verificar que el rango temporal sea suficiente
-    tiempo_disponible_segundos = df.index[-1].timestamp() - df.index[0].timestamp()
+    tiempo_disponible_segundos = df['timestamp'].iloc[-1] - df['timestamp'].iloc[0]
     tiempo_minimo_requerido = (num_ventanas_historicas + 1) * intervalo_ventana_minutos * 60 * 0.5  # Al menos 50% del tiempo requerido
 
     if tiempo_disponible_segundos < tiempo_minimo_requerido:
@@ -215,31 +215,47 @@ def cambio_porcentual_volumen(simbolo: str, intervalo_ventana_minutos: int = 30,
     if tiempo_disponible_segundos < tiempo_total_segundos:
         logger.info(f"ADVERTENCIA: Datos parciales para {simbolo}. Disponible: {tiempo_disponible_segundos/60:.0f} min, ideal: {tiempo_total_segundos/60:.0f} min. Continuando con datos disponibles...")
 
-    # Agrupar por ventanas de tiempo y sumar el volumen
-    try:
-        volumen_por_ventana = df['volume'].resample(f'{intervalo_ventana_minutos}T', label='right', closed='right').sum()
-        # Eliminar ventanas con volumen cero o NaN
-        volumen_por_ventana = volumen_por_ventana[volumen_por_ventana > 0]
-    except Exception as e:
-        logger.warning(f"Error al remuestrear datos de volumen para {simbolo}: {e}")
+    # Calcular ventanas móviles consecutivas (NO solapadas) desde el final
+    # Ventana 0: últimos N minutos
+    # Ventana 1: N minutos anteriores
+    # Ventana 2: N minutos anteriores a esos, etc.
+    timestamp_mas_reciente = df['timestamp'].iloc[-1]
+    ventanas_volumen = []
+
+    for i in range(num_ventanas_historicas + 1):
+        # Calcular límites de ventanas CONSECUTIVAS (no solapadas)
+        # Ventana 0: [now - 60min, now]
+        # Ventana 1: [now - 120min, now - 60min]
+        # Ventana 2: [now - 180min, now - 120min]
+        fin_ventana = timestamp_mas_reciente - (i * intervalo_ventana_minutos * 60)
+        inicio_ventana = timestamp_mas_reciente - ((i + 1) * intervalo_ventana_minutos * 60)
+
+        # Filtrar datos en esta ventana
+        datos_ventana = df[(df['timestamp'] > inicio_ventana) & (df['timestamp'] <= fin_ventana)]
+
+        # Sumar volumen
+        volumen_ventana = datos_ventana['volume'].sum()
+        ventanas_volumen.append(volumen_ventana)
+
+        logger.debug(f"Ventana {i}: {inicio_ventana} - {fin_ventana}, volumen: {volumen_ventana:.4f}, registros: {len(datos_ventana)}")
+
+    # Verificar que tenemos ventanas válidas
+    if len(ventanas_volumen) < num_ventanas_historicas + 1:
+        logger.warning(f"Ventanas insuficientes para {simbolo}: {len(ventanas_volumen)} ventanas vs {num_ventanas_historicas + 1} necesarias.")
         return {'simbolo': simbolo, 'volumen_total_actual': None, 'volumen_promedio_historico': None, 'cambio_porcentual_volumen': None}
 
-    # Verificar que tenemos suficientes ventanas
-    if len(volumen_por_ventana) < num_ventanas_historicas + 1:
-        logger.warning(f"Ventanas insuficientes para {simbolo}: {len(volumen_por_ventana)} ventanas vs {num_ventanas_historicas + 1} necesarias.")
-        return {'simbolo': simbolo, 'volumen_total_actual': None, 'volumen_promedio_historico': None, 'cambio_porcentual_volumen': None}
+    # La ventana actual es la primera (i=0)
+    volumen_total_actual = ventanas_volumen[0]
 
-    # La ventana actual es la última
-    volumen_total_actual = volumen_por_ventana.iloc[-1]
+    # Las ventanas históricas son las siguientes
+    ventanas_historicas = ventanas_volumen[1:]
 
-    # Las ventanas históricas son las anteriores
-    ventanas_historicas = volumen_por_ventana.iloc[-1 - num_ventanas_historicas:-1]
-
-    if ventanas_historicas.empty or len(ventanas_historicas) == 0:
+    if len(ventanas_historicas) == 0:
         logger.warning(f"No hay ventanas históricas de volumen para calcular el promedio para {simbolo}.")
         return {'simbolo': simbolo, 'volumen_total_actual': volumen_total_actual, 'volumen_promedio_historico': None, 'cambio_porcentual_volumen': None}
 
-    volumen_promedio_historico = ventanas_historicas.mean()
+    # Calcular promedio de las ventanas históricas (es una lista, no un Series de pandas)
+    volumen_promedio_historico = sum(ventanas_historicas) / len(ventanas_historicas)
 
     if volumen_promedio_historico == 0 or pd.isna(volumen_promedio_historico):
         cambio_porcentual = float('inf') if volumen_total_actual > 0 else 0.0
@@ -367,22 +383,30 @@ def obtener_senal_cambio_extremo(
     elif cambio_porcentual >= umbral_porcentual:
         senal_precio = "VENTA"
 
-    # Si no hay señal de precio o no se requiere confirmación de volumen, devolvemos la señal de precio.
-    if senal_precio == "MANTENER" or not confirmar_con_volumen:
-        resultado['senal'] = senal_precio
-        logger.info(f"Señal para {simbolo}: Precio actual={resultado['precio_actual']:.2f}, Precio anterior={resultado['precio_anterior']:.2f}, Cambio={cambio_porcentual:.2f}%, Señal={resultado['senal']}")
-        return resultado
-
-    # Si hay señal de precio y se requiere confirmación, analizamos el volumen.
-    # Usamos el mismo intervalo que para el precio para mantener sincronización
-    logger.info(f"Señal de precio '{senal_precio}' detectada para {simbolo}. Buscando confirmación de volumen...")
+    # SIEMPRE calculamos el volumen (para mostrarlo), independientemente de la señal de precio
+    logger.info(f"Analizando volumen para {simbolo}...")
     analisis_volumen = cambio_porcentual_volumen(simbolo, intervalo_minutos, num_ventanas_historicas_volumen)
     cambio_volumen = analisis_volumen.get('cambio_porcentual_volumen')
-    volumen_total_actual = analisis_volumen.get('volumen_total_actual')
-    volumen_promedio_historico = analisis_volumen.get('volumen_promedio_historico')
     resultado['volumen_total_actual'] = analisis_volumen.get('volumen_total_actual')
     resultado['volumen_promedio_historico'] = analisis_volumen.get('volumen_promedio_historico')
     resultado['cambio_porcentual_volumen'] = cambio_volumen
+
+    # Si no se requiere confirmación de volumen, devolvemos la señal de precio directamente
+    if not confirmar_con_volumen:
+        resultado['senal'] = senal_precio
+        resultado['volumen_confirmado'] = None
+        logger.info(f"Señal para {simbolo}: Precio actual={resultado['precio_actual']:.2f}, Precio anterior={resultado['precio_anterior']:.2f}, Cambio={cambio_porcentual:.2f}%, Señal={resultado['senal']} (sin confirmación de volumen)")
+        return resultado
+
+    # Si la señal de precio es MANTENER, no hay nada que confirmar con volumen
+    if senal_precio == "MANTENER":
+        resultado['senal'] = senal_precio
+        resultado['volumen_confirmado'] = None
+        logger.info(f"Señal para {simbolo}: MANTENER (cambio {cambio_porcentual:.2f}% no supera umbral {umbral_porcentual}%)")
+        return resultado
+
+    # Si hay señal de precio (COMPRA/VENTA) y se requiere confirmación, validamos con volumen
+    logger.info(f"Señal de precio '{senal_precio}' detectada para {simbolo}. Verificando confirmación de volumen...")
 
     # Si no hay datos de volumen disponibles, proceder con la señal de precio pero avisar
     if cambio_volumen is None:

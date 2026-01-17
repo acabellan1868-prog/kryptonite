@@ -285,3 +285,130 @@ La estrategia obtener_senal_cambio_extremo, con los parámetros que usaste, fue 
 NOTAS
 
 Podrías experimentar cambiando los parametros_estrategia (por ejemplo, un umbral_porcentual más alto o más bajo) para ver si puedes mejorar el resultado y conseguir una rentabilidad positiva en el mismo período.
+
+---
+
+## Presión Compradora vs Vendedora (OBV Simplificado)
+
+### Concepto
+
+El volumen total nos dice **cuánto** se ha operado, pero no **quién domina** el mercado. La presión compradora/vendedora nos ayuda a entender si el volumen está impulsando el precio hacia arriba o hacia abajo.
+
+### Fundamento Técnico
+
+#### OHLC (Open, High, Low, Close)
+
+Las velas de trading tienen 4 componentes:
+- **Open**: Precio de apertura
+- **High**: Precio máximo
+- **Low**: Precio mínimo
+- **Close**: Precio de cierre
+
+Actualmente solo guardamos el precio de **cierre** de cada vela de 1 minuto.
+
+#### OBV (On-Balance Volume)
+
+El OBV es un indicador clásico que acumula volumen según la dirección del precio:
+- Si el precio **sube** → el volumen se considera "comprador"
+- Si el precio **baja** → el volumen se considera "vendedor"
+
+### Implementación Simplificada
+
+Al no tener OHLC completo, usamos una versión simplificada basada en el precio de cierre:
+
+```
+Para cada minuto del período analizado:
+    Si precio_actual > precio_anterior:
+        → volumen_compra += volumen_minuto
+    Si precio_actual < precio_anterior:
+        → volumen_venta += volumen_minuto
+
+presión_compradora = volumen_compra / (volumen_compra + volumen_venta) × 100
+```
+
+### Ejemplo Práctico
+
+| Minuto | Precio Cierre | Volumen | Movimiento | Acumulado |
+|:------:|:-------------:|:-------:|:----------:|:---------:|
+| 1 | 81,900 | 2.5 BTC | - | - |
+| 2 | 81,920 | 1.8 BTC | SUBIÓ | compra += 1.8 |
+| 3 | 81,915 | 3.2 BTC | BAJÓ | venta += 3.2 |
+| 4 | 81,930 | 2.1 BTC | SUBIÓ | compra += 2.1 |
+| 5 | 81,925 | 1.5 BTC | BAJÓ | venta += 1.5 |
+
+**Resultado:**
+- Volumen compra: 3.9 BTC (45%)
+- Volumen venta: 4.7 BTC (55%)
+- **Presión compradora: 45%** (dominio vendedor)
+
+### Interpretación
+
+| Presión Compradora | Significado |
+|:------------------:|-------------|
+| 70-100% | Dominio comprador fuerte |
+| 50-70% | Ligera presión compradora |
+| 30-50% | Ligera presión vendedora |
+| 0-30% | Dominio vendedor fuerte |
+
+### Tabla de Decisiones: Señal + Presión
+
+| Señal Precio | Presión Compradora | Presión Vendedora | Interpretación | Acción |
+|:------------:|:------------------:|:-----------------:|----------------|:------:|
+| **COMPRA** | 70-100% | 0-30% | Caída con fuerte volumen comprador. Rebote muy probable. | COMPRAR |
+| **COMPRA** | 50-70% | 30-50% | Caída con ligera presión compradora. Rebote posible. | COMPRAR (cautela) |
+| **COMPRA** | 30-50% | 50-70% | Caída con ligera presión vendedora. Señal débil. | ESPERAR |
+| **COMPRA** | 0-30% | 70-100% | Caída con fuerte volumen vendedor. Puede seguir cayendo. | NO COMPRAR |
+| **VENTA** | 0-30% | 70-100% | Subida con fuerte volumen vendedor. Corrección probable. | VENDER |
+| **VENTA** | 30-50% | 50-70% | Subida con ligera presión vendedora. Corrección posible. | VENDER (cautela) |
+| **VENTA** | 50-70% | 30-50% | Subida con ligera presión compradora. Rally puede continuar. | ESPERAR |
+| **VENTA** | 70-100% | 0-30% | Subida con fuerte volumen comprador. Rally genuino. | NO VENDER |
+| **MANTENER** | 50-70% | 30-50% | Mercado lateral con ligera presión compradora. | Posible subida |
+| **MANTENER** | 30-50% | 50-70% | Mercado lateral con ligera presión vendedora. | Posible bajada |
+
+### Tabla Resumen Simplificada
+
+| Señal | Presión Compradora | Resultado |
+|:-----:|:------------------:|:---------:|
+| COMPRA | Alta (>50%) | Confirma COMPRA |
+| COMPRA | Baja (<50%) | Rechaza COMPRA |
+| VENTA | Alta (>50%) | Rechaza VENTA |
+| VENTA | Baja (<50%) | Confirma VENTA |
+
+### Regla de Oro
+
+> **"La señal de precio te dice QUÉ pasó. La presión te dice QUIÉN lo hizo."**
+
+- Precio bajó + más compradores → **Rebote probable**
+- Precio bajó + más vendedores → **Sigue cayendo**
+- Precio subió + más compradores → **Rally genuino**
+- Precio subió + más vendedores → **Corrección probable**
+
+### Casos de Uso: Trampas de Mercado
+
+Este indicador ayuda a detectar **trampas (traps)**:
+
+**Bull Trap (Trampa alcista):**
+- Precio sube bruscamente
+- Pero presión compradora baja (<40%)
+- Muchos vendedores aprovechando para salir
+- **Acción:** No comprar, posible corrección
+
+**Bear Trap (Trampa bajista):**
+- Precio cae bruscamente
+- Pero presión vendedora baja (<40%)
+- Muchos compradores acumulando
+- **Acción:** Comprar, posible rebote
+
+### Limitaciones
+
+- Es una **estimación**, no datos reales de órdenes de compra/venta
+- Menos preciso que usar `takerBuyBaseAssetVolume` de Binance
+- Puede dar falsos positivos en mercados muy laterales
+- Funciona mejor con ventanas de tiempo más largas (30-60 min)
+
+### Mejora Futura: OHLC Completo
+
+Para un análisis más preciso, se podría:
+1. Guardar OHLC completo en la BD (open, high, low, close)
+2. Analizar velas: alcistas (close > open) vs bajistas (close < open)
+3. Usar el cuerpo de la vela para ponderar la fuerza del movimiento
