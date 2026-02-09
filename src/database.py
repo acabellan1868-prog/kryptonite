@@ -443,35 +443,36 @@ def calcular_posicion_actual(simbolo: str):
     operaciones = cursor.fetchall()
     conexion.close()
 
-    cantidad_inversion = 0.0  # Solo compras/ventas/envíos
+    lotes_compra = []  # Lista FIFO de lotes: [cantidad_restante, coste_unitario]
     cantidad_recompensas = 0.0  # Recompensas de staking, airdrops, etc.
     cantidad_recepciones = 0.0  # Recepciones (transferencias entrantes)
-    coste_total = 0.0
 
     for tipo, cantidad, valor_total, comision in operaciones:
         tipo_lower = tipo.lower()
         comision_actual = comision if comision is not None else 0.0
 
         if tipo_lower == "compra":
-            cantidad_inversion += cantidad
-            coste_total += valor_total + comision_actual
+            coste_unitario = (valor_total + comision_actual) / cantidad if cantidad > 0 else 0.0
+            lotes_compra.append([cantidad, coste_unitario])
         elif tipo_lower in ["venta", "envío", "envio"]:
-            # Para ventas o envíos, reducimos el coste total proporcionalmente a la cantidad vendida/enviada (método del coste medio).
-            coste_medio_unitario = 0
-            if cantidad_inversion > 0:
-                coste_medio_unitario = coste_total / cantidad_inversion
-
-            coste_a_reducir = cantidad * coste_medio_unitario
-            coste_total -= coste_a_reducir
-            cantidad_inversion -= cantidad
+            # FIFO: consumir lotes desde el más antiguo
+            restante_por_vender = cantidad
+            while restante_por_vender > 0 and lotes_compra:
+                if lotes_compra[0][0] <= restante_por_vender:
+                    restante_por_vender -= lotes_compra[0][0]
+                    lotes_compra.pop(0)
+                else:
+                    lotes_compra[0][0] -= restante_por_vender
+                    restante_por_vender = 0
         elif tipo_lower == "recepción":
             cantidad_recepciones += cantidad
-            # El coste total no se modifica para recepciones "gratuitas"
         elif tipo_lower == "recompensa":
             cantidad_recompensas += cantidad
-            # El coste total no se modifica para recompensas (staking, etc.)
 
-    # Calcular coste medio solo basado en la inversión real
+    # Calcular totales a partir de los lotes restantes
+    cantidad_inversion = sum(lote[0] for lote in lotes_compra)
+    coste_total = sum(lote[0] * lote[1] for lote in lotes_compra)
+
     if cantidad_inversion > 0:
         coste_medio = coste_total / cantidad_inversion
     else:

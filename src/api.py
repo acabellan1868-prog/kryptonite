@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request  # Importa 'request' aquí
 import requests  # También necesitas importar 'requests' para hacer la solicitud a Binance
 from main import fetch_and_insert_data_last_30min, get_crypto_data  # Importamos el método y get_crypto_data
+from datetime import datetime
 import subprocess
 from config import logger, FAVORITES_FILTER, PORTFOLIO_FILTER
 from analisis_rendimineto import calcular_rendimiento_portafolio_total, obtener_portafolio # Importamos la nueva función
