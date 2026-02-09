@@ -526,6 +526,38 @@ def obtener_operaciones_por_criptomoneda(simbolo: str):
             conexion.close()
 
 
+def insertar_operacion(timestamp, cripto, moneda, tipo, cantidad, precio, valor_total, comision, origen):
+    """
+    Inserta una nueva operación en la tabla 'operaciones'.
+
+    :param timestamp: Timestamp Unix (segundos) de la operación.
+    :param cripto: Símbolo de la criptomoneda (ej. 'BTC').
+    :param moneda: Moneda fiat utilizada (ej. 'EUR').
+    :param tipo: Tipo de operación ('Compra', 'Venta', 'Recompensa', 'Recepción', 'Envío').
+    :param cantidad: Cantidad de criptomoneda.
+    :param precio: Precio unitario en el momento de la operación.
+    :param valor_total: Valor total de la operación.
+    :param comision: Comisión cobrada.
+    :param origen: Plataforma de origen (ej. 'Revolut', 'Binance').
+    """
+    conexion = None
+    try:
+        conexion = sqlite3.connect(DB_PATH)
+        cursor = conexion.cursor()
+        cursor.execute("""
+            INSERT INTO operaciones (timestamp, cripto, moneda, tipo, cantidad, precio, valor_total, comision, origen)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (timestamp, cripto.upper(), moneda, tipo, cantidad, precio, valor_total, comision, origen))
+        conexion.commit()
+        return cursor.lastrowid
+    except sqlite3.Error as e:
+        logger.error(f"Error al insertar operación: {e}")
+        raise
+    finally:
+        if conexion:
+            conexion.close()
+
+
 ####################################################################
 # guardar_uso_ia
 #######################################################

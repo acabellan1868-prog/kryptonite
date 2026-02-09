@@ -4,7 +4,7 @@ from main import fetch_and_insert_data_last_30min, get_crypto_data  # Importamos
 import subprocess
 from config import logger, FAVORITES_FILTER, PORTFOLIO_FILTER
 from analisis_rendimineto import calcular_rendimiento_portafolio_total, obtener_portafolio # Importamos la nueva función
-from database import get_data_from_db, obtener_precio_portafolio, limpiar_crypto_data
+from database import get_data_from_db, obtener_precio_portafolio, limpiar_crypto_data, insertar_operacion
 from charts import generate_chart, generar_grafica_comparativa
 from analysis import obtener_senal_cambio_extremo, cambio_porcentual_precio, cambio_porcentual_volumen, obtener_senal_cruce_medias_moviles
 import base64
@@ -302,6 +302,70 @@ def backtest_strategy():
     except Exception as e:
         logger.error(f"Error durante la ejecución del backtest: {e}", exc_info=True)
         return jsonify({"error": f"Ocurrió un error interno durante el backtest: {str(e)}"}), 500
+
+@app.route('/nuevaOperacion', methods=['POST'])
+def nueva_operacion():
+    """
+    Endpoint para insertar una nueva operación en la tabla 'operaciones'.
+
+    Cuerpo JSON requerido:
+        - timestamp (int): Timestamp Unix en segundos.
+        - cripto (str): Símbolo de la criptomoneda (ej. 'BTC').
+        - moneda (str): Moneda fiat (ej. 'EUR').
+        - tipo (str): Tipo de operación ('Compra', 'Venta', 'Recompensa', 'Recepción', 'Envío').
+        - cantidad (float): Cantidad de criptomoneda.
+        - precio (float): Precio unitario.
+        - valor_total (float): Valor total de la operación.
+        - comision (float): Comisión cobrada.
+        - origen (str): Plataforma de origen (ej. 'Revolut', 'Binance').
+
+    Retorna:
+        - JSON con el id de la operación insertada y mensaje de confirmación.
+    """
+    datos = request.get_json()
+    if not datos:
+        return jsonify({"error": "Cuerpo de la solicitud JSON vacío o inválido."}), 400
+
+    # Campos obligatorios
+    campos_obligatorios = ['timestamp', 'cripto', 'moneda', 'tipo', 'cantidad', 'precio', 'valor_total', 'comision', 'origen']
+    campos_faltantes = [campo for campo in campos_obligatorios if campo not in datos]
+    if campos_faltantes:
+        return jsonify({"error": f"Faltan campos obligatorios: {', '.join(campos_faltantes)}"}), 400
+
+    # Validar tipos permitidos
+    tipos_permitidos = ['Compra', 'Venta', 'Recompensa', 'Recepción', 'Envío']
+    if datos['tipo'] not in tipos_permitidos:
+        return jsonify({"error": f"Tipo de operación no válido. Valores permitidos: {', '.join(tipos_permitidos)}"}), 400
+
+    try:
+        marca_temporal = int(datos['timestamp'])
+        cantidad = float(datos['cantidad'])
+        precio = float(datos['precio'])
+        valor_total = float(datos['valor_total'])
+        comision = float(datos['comision'])
+    except (ValueError, TypeError):
+        return jsonify({"error": "Los campos numéricos (timestamp, cantidad, precio, valor_total, comision) deben ser valores numéricos válidos."}), 400
+
+    try:
+        id_operacion = insertar_operacion(
+            timestamp=marca_temporal,
+            cripto=datos['cripto'],
+            moneda=datos['moneda'],
+            tipo=datos['tipo'],
+            cantidad=cantidad,
+            precio=precio,
+            valor_total=valor_total,
+            comision=comision,
+            origen=datos['origen']
+        )
+        return jsonify({
+            "mensaje": f"Operación insertada correctamente.",
+            "id_operacion": id_operacion
+        }), 201
+    except Exception as e:
+        logger.error(f"Error al insertar nueva operación: {e}", exc_info=True)
+        return jsonify({"error": f"Error al insertar la operación: {str(e)}"}), 500
+
 
 # ==================== IA CON GROQ - AÑADIDO AL FINAL DEL ARCHIVO ====================
 
