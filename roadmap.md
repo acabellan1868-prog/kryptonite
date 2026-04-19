@@ -2,14 +2,32 @@
 
 ## Estado actual
 
-**Fecha:** 2026-04-18
+**Fecha:** 2026-04-19
 
-Fase 1 completada. Sistema en producción con portfolio analyzer, agente IA mejorado
-y detección de cambios desde última consulta. Sin fase activa en curso.
+En curso: **dockerización** (ver `documentacion/roadmap-dockerizacion.md`).
 
-**Próximo paso:** Elegir entre alertas avanzadas (Fase 1.2.2/Sistema Alertas) o
-historial persistente del agente IA (Fase 1.2.2). Ver `documentacion/roadmap-2026.md`
-para el análisis detallado de cada opción.
+Tareas completadas hoy:
+- ✅ `src/` renombrado a `app/` via `git mv`
+- ✅ `app/config.py` limpiado: sin `os.chdir`, rutas relativas, prefijo `KRYPTO_`
+- ✅ `Dockerfile` creado (python:3.12-slim, PYTHONPATH=/app/app, entry Flask)
+- ✅ `docker-compose.yml` creado
+- ✅ `kryptonite-build` clonado en VM 101 (`/mnt/datos/kryptonite-build/`)
+- ✅ Build Docker exitoso en el servidor
+- ✅ Contenedor arranca correctamente (probado en puerto 5001)
+
+**Próximo paso:** Verificar que el contenedor lee la BD correctamente.
+En PuTTY ejecutar:
+```bash
+docker exec -it kryptonite python -c "
+import sqlite3
+conn = sqlite3.connect('data/kryptonite.db')
+tablas = conn.execute(\"SELECT name FROM sqlite_master WHERE type='table'\").fetchall()
+print('Tablas:', tablas)
+conn.close()
+"
+```
+Si la BD está vacía, `/portafolio` devuelve `[]` — es comportamiento correcto.
+Si no encuentra la BD, revisar el volumen montado.
 
 ---
 
