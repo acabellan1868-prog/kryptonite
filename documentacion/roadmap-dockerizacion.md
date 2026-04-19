@@ -34,7 +34,7 @@ Documento de analisis: [analisis-dockerizacion.md](analisis-dockerizacion.md)
   - Variables con prefijo `KRYPTO_` como estandar; alias sin prefijo para compatibilidad
   - `data/` y `logs/` se crean solos al arrancar
 
-- [ ] 1.3 Crear Dockerfile
+- [x] 1.3 Crear Dockerfile
   - Base: `python:3.12-slim`
   - Instalar dependencias de sistema (`libfreetype6-dev`, `libpng-dev`)
   - `pip install` de `requirements.txt`
@@ -42,7 +42,7 @@ Documento de analisis: [analisis-dockerizacion.md](analisis-dockerizacion.md)
   - Entry point: `python -m flask --app api run --host 0.0.0.0 --port 5000`
   - Probar build local: `docker build -t kryptonite .`
 
-- [ ] 1.4 Crear docker-compose.yml local
+- [x] 1.4 Crear docker-compose.yml local
   - Servicio `kryptonite` con build, puertos, volumenes, env_file
   - Probar: `docker compose up` y verificar endpoints con curl
 
