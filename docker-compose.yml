@@ -1,0 +1,14 @@
+services:
+  kryptonite:
+    build: .
+    container_name: kryptonite
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    env_file:
+      - parametros.env
+    environment:
+      - TZ=Europe/Madrid
+    restart: unless-stopped
