@@ -2,6 +2,22 @@
 
 ## 2026-04-21
 
+### Fases 2 y 3 completadas — FastAPI + integración en hogarOS
+
+Migración Flask → FastAPI:
+- `app/principal.py`: FastAPI con lifespan (LLM + agente inicializados una vez)
+- `app/esquemas.py`: modelos Pydantic para request bodies
+- `app/rutas/`: 4 routers (datos, portfolio, analisis, ia)
+- Dockerfile actualizado a uvicorn; flask/papermill eliminados de requirements.txt
+
+Integración en hogarOS:
+- `docker-compose.yml`: nuevo servicio kryptonite (build desde `/mnt/datos/kryptonite-build`, puerto 5001 externo por conflicto con JupyterLab)
+- `nginx.conf`: upstream kryptonite como contenedor (ya no `host.docker.internal:5000`)
+- `actualizar.sh`: añadido `kryptonite-build` al git pull
+- Remote de kryptonite-build cambiado a SSH para evitar prompt de credenciales
+
+API verificada en producción: `http://192.168.31.131/crypto/api/portafolio` ✅
+
 ### Fase 1 completada — verificación de endpoints
 
 La BD original estaba vacía (0 bytes) en `/mnt/datos/kryptonite/data/`. Se localizó la BD real en `/mnt/datos/jupyter/kryptonite/data/kryptonite.db` (292 MB) y se copió al volumen correcto.

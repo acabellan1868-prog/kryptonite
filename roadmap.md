@@ -6,9 +6,9 @@
 
 **Fase 1 (dockerización Flask) completada.** Kryptonite corre en Docker en VM 101, puerto 5001. BD operativa, todos los endpoints verificados.
 
-**Próximo paso:** Iniciar Fase 2 — migrar Flask a FastAPI.
+**Próximo paso:** Fase 4 (opcional) — frontend web integrado en el portal.
 
-### Fase 1 completada ✅
+### Fases 1, 2 y 3 completadas ✅
 - ✅ `src/` renombrado a `app/` via `git mv`
 - ✅ `app/config.py` limpiado: sin `os.chdir`, rutas relativas, prefijo `KRYPTO_`
 - ✅ `Dockerfile` creado (python:3.12-slim, PYTHONPATH=/app/app, entry Flask)
