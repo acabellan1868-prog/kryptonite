@@ -2,6 +2,10 @@
 
 ## 2026-04-21
 
+### Nuevo endpoint POST /nuevaOperacion
+
+Añadido en la migración a FastAPI. Permite insertar operaciones (compra, venta, recompensa…) en la BD desde fuera de la aplicación — por ejemplo desde Node-RED o Telegram — sin acceder directamente a SQLite. Recibe cripto, cantidad, precio, comisión, tipo y origen. Devuelve el ID de la operación insertada.
+
 ### Fases 2 y 3 completadas — FastAPI + integración en hogarOS
 
 Migración Flask → FastAPI:
