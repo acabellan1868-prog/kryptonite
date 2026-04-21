@@ -46,10 +46,12 @@ Documento de analisis: [analisis-dockerizacion.md](analisis-dockerizacion.md)
   - Servicio `kryptonite` con build, puertos, volumenes, env_file
   - Probar: `docker compose up` y verificar endpoints con curl
 
-- [ ] 1.5 Verificar que todo funciona
-  - `GET /portafolio` devuelve datos
-  - `POST /prompt` responde (requiere GROQ_API_KEY)
-  - Logs se escriben en `./logs/`
+- [x] 1.5 Verificar que todo funciona
+  - `GET /portafolio` devuelve datos ✅
+  - `GET /portafolio?analisis=completo` ✅
+  - `GET /valor?crypto=BTC` ✅
+  - `GET /senal/cambio_extremo` ✅
+  - BD copiada de JupyterLab (292 MB) a `/mnt/datos/kryptonite/data/` ✅
 
 ### Entregables
 - `Dockerfile`

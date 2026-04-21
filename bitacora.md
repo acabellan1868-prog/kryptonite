@@ -1,5 +1,21 @@
 # Bitácora — Kryptonite
 
+## 2026-04-21
+
+### Fase 1 completada — verificación de endpoints
+
+La BD original estaba vacía (0 bytes) en `/mnt/datos/kryptonite/data/`. Se localizó la BD real en `/mnt/datos/jupyter/kryptonite/data/kryptonite.db` (292 MB) y se copió al volumen correcto.
+
+Endpoints verificados desde el navegador en `http://192.168.31.131:5001`:
+- `/portafolio` — portfolio completo con 6 criptos y datos reales
+- `/portafolio?analisis=completo` — portfolio + análisis de riesgo
+- `/valor?crypto=BTC` — precio actual
+- `/senal/cambio_extremo` — señales de trading
+
+**Fase 1 cerrada.** Próximo paso: Fase 2 (migración Flask → FastAPI).
+
+---
+
 ## 2026-04-19
 
 ### Fase 1 dockerización — sesión de trabajo

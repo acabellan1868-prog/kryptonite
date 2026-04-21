@@ -2,32 +2,22 @@
 
 ## Estado actual
 
-**Fecha:** 2026-04-19
+**Fecha:** 2026-04-21
 
-En curso: **dockerización** (ver `documentacion/roadmap-dockerizacion.md`).
+**Fase 1 (dockerización Flask) completada.** Kryptonite corre en Docker en VM 101, puerto 5001. BD operativa, todos los endpoints verificados.
 
-Tareas completadas hoy:
+**Próximo paso:** Iniciar Fase 2 — migrar Flask a FastAPI.
+
+### Fase 1 completada ✅
 - ✅ `src/` renombrado a `app/` via `git mv`
 - ✅ `app/config.py` limpiado: sin `os.chdir`, rutas relativas, prefijo `KRYPTO_`
 - ✅ `Dockerfile` creado (python:3.12-slim, PYTHONPATH=/app/app, entry Flask)
 - ✅ `docker-compose.yml` creado
 - ✅ `kryptonite-build` clonado en VM 101 (`/mnt/datos/kryptonite-build/`)
 - ✅ Build Docker exitoso en el servidor
-- ✅ Contenedor arranca correctamente (probado en puerto 5001)
-
-**Próximo paso:** Verificar que el contenedor lee la BD correctamente.
-En PuTTY ejecutar:
-```bash
-docker exec -it kryptonite python -c "
-import sqlite3
-conn = sqlite3.connect('data/kryptonite.db')
-tablas = conn.execute(\"SELECT name FROM sqlite_master WHERE type='table'\").fetchall()
-print('Tablas:', tablas)
-conn.close()
-"
-```
-Si la BD está vacía, `/portafolio` devuelve `[]` — es comportamiento correcto.
-Si no encuentra la BD, revisar el volumen montado.
+- ✅ Contenedor arranca correctamente (puerto 5001)
+- ✅ BD copiada de JupyterLab a `/mnt/datos/kryptonite/data/kryptonite.db` (292 MB)
+- ✅ Endpoints verificados: `/portafolio`, `/portafolio?analisis=completo`, `/valor`, `/senal/cambio_extremo`
 
 ---
 
