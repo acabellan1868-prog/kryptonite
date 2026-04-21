@@ -8,8 +8,8 @@ requests==2.31.0
 python-telegram-bot==20.1
 python-binance==1.0.18
 schedule==1.1.0
-flask==3.0.0
-papermill==2.5.0
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
 kaleido==0.2.1
 # pandas-ta eliminado: solo lo usa modelo_ia.py (Random Forest sin integrar)
 # ================== IA + AGENTE ==================
