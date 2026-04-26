@@ -6,7 +6,7 @@
 
 **Fase 1 (dockerización Flask) completada.** Kryptonite corre en Docker en VM 101, puerto 5001. BD operativa, todos los endpoints verificados.
 
-**Próximo paso:** Fase 4 (opcional) — frontend web integrado en el portal.
+**Próximo paso:** Fase 7 — Integración Revolut X API. Comenzar por la tarea 7.1: generar claves Ed25519 y registrarlas en el panel de Revolut X (`exchange.revolut.com`).
 
 ### Fases 1, 2 y 3 completadas ✅
 - ✅ `src/` renombrado a `app/` via `git mv`
@@ -55,6 +55,39 @@ Sistema de alertas con condiciones complejas (precio + volumen + sentimiento + i
 
 - [ ] 🤖 Paper trading (simulador sin riesgo)
 - [ ] 🤖 Reportes PDF automáticos (diario/semanal/mensual)
+
+### Fase 7 — Integración Revolut X API (en curso)
+
+Automatizar la importación de recompensas de staking de DOT (Polkadot) y ADA (Cardano) desde Revolut X hacia la tabla `operaciones` de la BD.
+
+#### 7.1 — Autenticación Ed25519
+- [ ] 👤 Generar par de claves Ed25519 con OpenSSL en local
+- [ ] 👤 Registrar la clave pública en el panel de Revolut X (`exchange.revolut.com`)
+- [ ] 👤 Añadir `REVOLUT_API_KEY` y `REVOLUT_PRIVATE_KEY` a `parametros.env`
+- [ ] 🤖 Añadir las variables a `parametros.env.example` (sin valores)
+- [ ] 🤖 Declarar las variables en `app/config.py` con prefijo `KRYPTO_`
+
+#### 7.2 — Módulo de integración `app/revolut_x.py`
+- [ ] 🤖 Función de firma Ed25519 (headers `X-Revx-API-Key`, `X-Revx-Timestamp`, `X-Revx-Signature`)
+- [ ] 🤖 Función `obtener_trades(simbolo, inicio, fin)` — ventana máx. 7 días
+- [ ] 🤖 Función `obtener_recompensas(moneda, desde, hasta)` — itera en ventanas de 7 días y filtra por tipo recompensa
+- [ ] 🤖 Lógica anti-duplicados basada en `transaction_id` de Revolut X
+
+#### 7.3 — Endpoint de sincronización `app/rutas/revolut.py`
+- [ ] 🤖 `GET /revolut/sincronizar?moneda=DOT&desde=YYYY-MM-DD` — descarga e inserta recompensas
+- [ ] 🤖 `GET /revolut/sincronizar` sin parámetros — sincroniza DOT y ADA del último mes
+- [ ] 🤖 Registrar el nuevo router en `app/principal.py`
+
+#### 7.4 — Carga histórica inicial
+- [ ] 👤 Determinar fecha de la primera recompensa en Revolut X para DOT y ADA
+- [ ] 🤖 Ejecutar carga histórica completa desde esa fecha hasta hoy
+- [ ] 👤 Verificar que los datos coinciden con lo que muestra la app de Revolut X
+
+#### 7.5 — Automatización periódica con Node-RED
+- [ ] 👤 Crear flujo en Node-RED que llame a `/revolut/sincronizar` semanalmente
+- [ ] 👤 Verificar que las nuevas recompensas aparecen en `/portafolio`
+
+---
 
 ### Fase 6 — Expansión (opcional, futuro)
 
