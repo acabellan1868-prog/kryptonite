@@ -1,5 +1,36 @@
 # Bitácora — Kryptonite
 
+## 2026-04-25
+
+### AGENTS.md local para Codex
+
+Creado `AGENTS.md` en el repo de Kryptonite a partir de `CLAUDE.md`, con stack,
+estructura, API, variables de entorno y gotchas operativos.
+
+Añadidos dos matices:
+- Kryptonite ya está migrado a FastAPI; Flask queda obsoleto para trabajo nuevo.
+- La siguiente integración técnica prevista es Revolut X, pero el estado y fases
+  siguen viviendo en `roadmap.md`.
+
+---
+
+## 2026-04-22
+
+### Planificación Fase 7 — Integración Revolut X API
+
+Sesión de análisis y diseño para automatizar la importación de recompensas de staking de DOT (Polkadot) y ADA (Cardano) desde la API de Revolut X.
+
+Decisiones tomadas:
+- Las recompensas se guardarán en la tabla `operaciones` existente (tipo=`Recompensa`, origen=`Revolut`), sin nueva tabla.
+- La autenticación usa firma Ed25519 — cada petición lleva tres headers firmados.
+- El API tiene un límite de ventana de 7 días por petición; la carga histórica iterará en ventanas semanales.
+- Se creará el módulo `app/revolut_x.py` y la ruta `app/rutas/revolut.py` con el endpoint `/revolut/sincronizar`.
+- La automatización periódica se hará desde Node-RED (llamada semanal).
+
+Roadmap actualizado con la Fase 7 completa (tareas 7.1 a 7.5). Implementación pendiente para la siguiente sesión.
+
+---
+
 ## 2026-04-21
 
 ### Nuevo endpoint POST /nuevaOperacion
