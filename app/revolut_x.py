@@ -286,7 +286,9 @@ async def sincronizar_recompensas(
     if not hasta:
         hasta = datetime.now().strftime("%Y-%m-%d")
 
+    print(f"🔄 [REVOLUT_X] sincronizar_recompensas({moneda}, {desde}, {hasta})")
     recompensas = await obtener_recompensas(moneda, desde, hasta)
+    print(f"📊 [REVOLUT_X] Encontradas {len(recompensas)} recompensas")
 
     resultado = {
         "moneda": moneda,
