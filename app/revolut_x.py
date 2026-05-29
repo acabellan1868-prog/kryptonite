@@ -17,8 +17,8 @@ from typing import Optional, List, Dict, Any
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
 
-from app.config import KRYPTO_REVOLUT_API_KEY, KRYPTO_REVOLUT_PRIVATE_KEY
-from app import bd
+from config import KRYPTO_REVOLUT_API_KEY, KRYPTO_REVOLUT_PRIVATE_KEY
+import bd
 
 logger = logging.getLogger("kryptonite.revolut_x")
 

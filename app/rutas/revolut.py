@@ -10,7 +10,7 @@ import logging
 from datetime import datetime, timedelta
 from fastapi import APIRouter, HTTPException
 
-from app import revolut_x
+from .. import revolut_x
 
 logger = logging.getLogger("kryptonite.rutas.revolut")
 ruta = APIRouter()
@@ -103,7 +103,7 @@ async def obtener_recompensas_importadas(
     Útil para verificación y comparación con la app de Revolut X.
     """
     try:
-        from app import bd
+        import bd
 
         # Construir WHERE clause
         where = ["origen = 'Revolut' AND tipo = 'Recompensa'"]
@@ -187,7 +187,7 @@ async def estado_sincronizacion():
     - Próxima sincronización automática (si está configurada en Node-RED)
     """
     try:
-        from app import bd
+        import bd
 
         # Contar recompensas por origen/moneda
         recompensas = bd.consultar_todos(
@@ -254,7 +254,7 @@ async def contar_operaciones(
       → Total de operaciones de DOT
     """
     try:
-        from app import bd
+        import bd
 
         # Construir consulta SQL con filtros opcionales
         where = []
