@@ -101,10 +101,12 @@ async def _hacer_request(
     """
     headers = _generar_headers_autenticados(metodo, ruta)
     if not headers:
-        logger.error("No se pudo generar headers autenticados")
+        logger.error("❌ No se pudo generar headers autenticados (credenciales faltantes)")
         return None
 
     url = REVOLUT_X_API_BASE + ruta
+    logger.info(f"🔄 Intentando {metodo} {url} con parámetros: {params}")
+    logger.debug(f"Headers: {headers}")
 
     try:
         async with httpx.AsyncClient(timeout=REVOLUT_X_TIMEOUT) as cliente:
@@ -116,13 +118,19 @@ async def _hacer_request(
                 logger.error(f"Método HTTP no soportado: {metodo}")
                 return None
 
+            logger.info(f"✅ Respuesta {metodo} {url}: {respuesta.status_code}")
             respuesta.raise_for_status()
-            return respuesta.json()
+            resultado = respuesta.json()
+            logger.debug(f"Contenido: {resultado}")
+            return resultado
+    except httpx.HTTPStatusError as e:
+        logger.error(f"❌ Error HTTP {e.response.status_code} en {metodo} {url}: {e.response.text}")
+        return None
     except httpx.HTTPError as e:
-        logger.error(f"Error HTTP en {metodo} {url}: {e}")
+        logger.error(f"❌ Error de conexión en {metodo} {url}: {e}")
         return None
     except Exception as e:
-        logger.error(f"Error inesperado en petición a Revolut X: {e}")
+        logger.error(f"❌ Error inesperado en petición a Revolut X: {e}")
         return None
 
 
