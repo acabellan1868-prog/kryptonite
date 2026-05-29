@@ -85,7 +85,8 @@ def _generar_headers_autenticados(metodo: str, ruta: str) -> Optional[Dict[str, 
         ahora_ms = int(time.time() * 1000)
 
         # Mensaje a firmar: METODO|RUTA|TIMESTAMP
-        mensaje = f"{metodo}|{ruta}|{ahora_ms}".encode("utf-8")
+        mensaje_str = f"{metodo}|{ruta}|{ahora_ms}"
+        mensaje = mensaje_str.encode("utf-8")
         firma = _generar_firma(mensaje, clave_privada)
 
         headers = {
@@ -95,6 +96,9 @@ def _generar_headers_autenticados(metodo: str, ruta: str) -> Optional[Dict[str, 
             "Content-Type": "application/json",
         }
         print(f"🔑 [REVOLUT_X] Headers generados para {metodo} {ruta}")
+        print(f"   Mensaje a firmar: {mensaje_str}")
+        print(f"   Firma (base64): {firma[:50]}...")
+        print(f"   API Key: {KRYPTO_REVOLUT_API_KEY[:20]}...")
         return headers
     except Exception as e:
         print(f"❌ [REVOLUT_X] Error al generar headers: {e}")

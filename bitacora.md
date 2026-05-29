@@ -1,5 +1,87 @@
 # Bitácora — Kryptonite
 
+## 2026-05-29 (tarde) — Generación de claves Ed25519 y debug de autenticación Revolut X
+
+### Estado actual
+**Bloqueador activo:** Revolut X devuelve HTTP 401 "Signature verification rejected" en todos los intentos de sincronización de recompensas.
+
+### Acciones realizadas ✅
+
+**1. Generación de claves Ed25519**
+Se generó un nuevo par de claves Ed25519 con OpenSSL:
+- Clave privada (guardada en `parametros.env`): `MC4CAQAwBQYDK2VwBCIEIOZsHSKyikN35/SbTuuDiHOXFHXQqMrxBkBLiOFHo04v`
+- Clave pública (registrada en Revolut X): `MCowBQYDK2VwAyEA5Fy1bZW5ZlKnvVUbP//uvl2MpAgFeJZ+3A9ZLo2NlUc=`
+
+Nota: El usuario registró la clave pública EN EL PANEL DE REVOLUT X con los bloques BEGIN/END, como se verifica en la documentación oficial.
+
+**2. Actualización de `parametros.env`**
+Se actualizó `/mnt/datos/kryptonite-build/parametros.env` con:
+```
+KRYPTO_REVOLUT_API_KEY="iOtOzRpf2tu17xUt7QiqLJb51ZCkPbepDrB6JwCXipswc4s0i0YL8dx0ELMcZ2oA"
+KRYPTO_REVOLUT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----
+MC4CAQAwBQYDK2VwBCIEIOZsHSKyikN35/SbTuuDiHOXFHXQqMrxBkBLiOFHo04v
+-----END PRIVATE KEY-----"
+```
+
+Importante: Usar comillas en `.env` para variables multilínea.
+
+**3. Reconstrucción del contenedor**
+El usuario reconstruyó el contenedor con `docker-compose build --no-cache && docker-compose up -d`.
+
+### Problema detectado ❌
+
+**Endpoint:** `GET http://192.168.31.131:5001/revolut/sincronizar?moneda=DOT&desde=2025-12-28&hasta=2026-05-29`
+
+**Error:** HTTP 401 - "Signature verification rejected"
+```json
+{
+  "message": "Signature verification rejected",
+  "error_id": "23df56cb-8b45-4818-9e1a-3aa2291e6b27",
+  "timestamp": 1780076325138
+}
+```
+
+**Síntomas:**
+- Clave privada carga correctamente (118 chars, ✅)
+- Headers se generan sin error (✅)
+- Petición HTTP se envía correctamente (✅)
+- Pero Revolut X rechaza la firma
+
+**Posibles causas:**
+1. El formato del mensaje a firmar es incorrecto
+2. El algoritmo de firma no coincide con lo que Revolut X espera
+3. La documentación de Revolut X especifica un formato diferente al que estamos usando
+
+### Debug añadido 🔧
+
+Se añadieron prints en `app/revolut_x.py` línea ~97 para mostrar:
+- Mensaje exacto que se está firmando
+- Firma generada (primeros 50 chars)
+- API Key (primeros 20 chars)
+
+### Próximos pasos para la siguiente sesión
+
+**CRÍTICO: Revisar documentación de Revolut X**
+1. Acceder a: https://developer.revolut.com/docs/x-api/revolut-x-crypto-exchange-rest-api
+2. Buscar la sección de autenticación Ed25519
+3. Verificar:
+   - Formato exacto del mensaje a firmar (¿es `METODO|RUTA|TIMESTAMP`?)
+   - Dónde va la ruta (¿incluye query params?)
+   - Qué unidades usa el timestamp (¿milisegundos o segundos?)
+   - Si hay un prefijo especial en el header `X-Revx-Signature`
+
+**Si los logs muestran que el mensaje es incorrecto:**
+1. Corregir el formato en `_generar_headers_autenticados()`
+2. Reconstruir contenedor
+3. Probar nuevamente
+
+**Si el formato es correcto pero sigue fallando:**
+1. Verificar que la clave privada se carga correctamente (load_pem_private_key)
+2. Probar con una firma manual generada desde OpenSSL para comparar
+3. Revisar si Revolut X espera un encoding diferente (¿base64url en lugar de base64?)
+
+---
+
 ## 2026-05-29 (continuación) — Debug Fase 7.4 y fixes de integración Revolut X
 
 ### Problemas resueltos ✅
