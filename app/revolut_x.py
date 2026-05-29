@@ -182,15 +182,15 @@ async def obtener_recompensas(
 
         print(f"📅 [REVOLUT_X] Obteniendo {moneda} recompensas: {desde_str} a {hasta_str}")
 
-        # Consultar transacciones de esta ventana
+        # Parámetros según documentación oficial de Revolut X
         params = {
-            "symbol": moneda,
-            "type": "Reward",  # Solo recompensas
-            "startDate": desde_str,
-            "endDate": hasta_str,
+            "start_date": desde_str,
+            "end_date": hasta_str,
+            "limit": 1900,  # Máximo permitido
         }
 
-        resultado = await _hacer_request("GET", "/transactions", params)
+        # Endpoint correcto: /trades/{symbol}
+        resultado = await _hacer_request("GET", f"/trades/{moneda}", params)
 
         print(f"📡 [REVOLUT_X] Respuesta recibida: {resultado}")
 
