@@ -175,7 +175,7 @@ async def obtener_recompensas(
         desde_str = ventana_actual.strftime("%Y-%m-%d")
         hasta_str = ventana_fin.strftime("%Y-%m-%d")
 
-        logger.info(f"Obteniendo {moneda} recompensas: {desde_str} a {hasta_str}")
+        print(f"📅 [REVOLUT_X] Obteniendo {moneda} recompensas: {desde_str} a {hasta_str}")
 
         # Consultar transacciones de esta ventana
         params = {
@@ -187,9 +187,15 @@ async def obtener_recompensas(
 
         resultado = await _hacer_request("GET", f"/trading/transactions", params)
 
+        print(f"📡 [REVOLUT_X] Respuesta recibida: {resultado}")
+
         if resultado and "transactions" in resultado:
             recompensas.extend(resultado["transactions"])
-            logger.info(f"  → {len(resultado['transactions'])} transacciones encontradas")
+            print(f"✅ [REVOLUT_X] {len(resultado['transactions'])} transacciones encontradas en ventana {desde_str}-{hasta_str}")
+        elif resultado:
+            print(f"⚠️  [REVOLUT_X] Respuesta sin 'transactions': {resultado}")
+        else:
+            print(f"❌ [REVOLUT_X] Sin respuesta o respuesta vacía")
 
         ventana_actual = ventana_fin + timedelta(days=1)
 
