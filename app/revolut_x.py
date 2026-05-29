@@ -190,7 +190,7 @@ async def obtener_recompensas(
             "endDate": hasta_str,
         }
 
-        resultado = await _hacer_request("GET", f"/trading/transactions", params)
+        resultado = await _hacer_request("GET", "/transactions", params)
 
         print(f"📡 [REVOLUT_X] Respuesta recibida: {resultado}")
 
