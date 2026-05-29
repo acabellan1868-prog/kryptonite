@@ -10,7 +10,7 @@ import logging
 from datetime import datetime, timedelta
 from fastapi import APIRouter, HTTPException
 
-from .. import revolut_x
+import revolut_x
 
 logger = logging.getLogger("kryptonite.rutas.revolut")
 ruta = APIRouter()
