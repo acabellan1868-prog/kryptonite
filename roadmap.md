@@ -2,13 +2,18 @@
 
 ## Estado actual
 
-**Fecha:** 2026-05-29
+**Fecha:** 2026-05-29 (19:07)
 
-**Fases 1-3 y 7.1-7.3 completadas.** Kryptonite corre en Docker en VM 101, puerto 5001. Integración Revolut X lista (endpoints `/revolut/sincronizar`, `/revolut/recompensas`, `/revolut/estado`).
+**Fases 1-3 y 7.1-7.3 completadas.** Kryptonite corre en Docker. Integración Revolut X parcialmente funcional:
+- ✅ Autenticación Ed25519 correcta
+- ✅ Endpoints API creados (`/revolut/sincronizar`, `/revolut/recompensas`, `/revolut/estado`)
+- ✅ Endpoint `/operaciones/contar` para verificar crecimiento de portfolio
+- ❌ Endpoint de Revolut X devuelve 404 — necesaria investigación del API correcto
 
-**Nuevo:** Endpoint `/operaciones/contar` para verificar si el portfolio crece por nuevas recompensas o cambios de precio.
+**Bloqueador actual:** El endpoint `/transactions` en Revolut X API devuelve 404. 
+Necesario encontrar el endpoint correcto para obtener transacciones/recompensas de staking.
 
-**Próximo paso:** Fase 7.4 — Determinar fecha de primera recompensa en Revolut X y ejecutar carga histórica. Después: Fase 7.5 — Configurar automatización semanal en Node-RED.
+**Próximo paso:** Fase 7.4 — Investigar documentación de Revolut X y corregir endpoint de API.
 
 ### Fases 1, 2 y 3 completadas ✅
 - ✅ `src/` renombrado a `app/` via `git mv`

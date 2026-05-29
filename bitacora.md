@@ -1,5 +1,46 @@
 # Bitácora — Kryptonite
 
+## 2026-05-29 (continuación) — Debug Fase 7.4 y fixes de integración Revolut X
+
+### Problemas resueltos ✅
+
+**1. Endpoint `/operaciones/contar`**
+- Creado endpoint que devuelve el total de operaciones en BD con filtros opcionales
+- Permite verificar si portfolio crece por nuevas recompensas (cantidad) o cambios de precio
+
+**2. Módulo `app/bd.py`**
+- Creado módulo con funciones `consultar_uno()`, `consultar_todos()`, `ejecutar()`
+- Proporciona API de alto nivel para acceso a BD SQLite
+
+**3. Fixes de imports**
+- Corregido orden de `load_dotenv()` en `principal.py` (antes de imports)
+- Cambio de imports relativos a directos en `revolut.py` y `revolut_x.py`
+- Resuelto problema de PYTHONPATH con estructura de carpetas
+
+**4. Configuración de credenciales**
+- Arreglado nombre de variables en `config.py`: `REVOLUT_API_KEY` → `KRYPTO_REVOLUT_API_KEY`
+- Credenciales Ed25519 registradas en Revolut X (clave pública)
+- Variables de entorno cargadas correctamente en contenedor
+
+**5. Debugging y logging**
+- Agregados prints detallados en `revolut_x.py` para diagnosticar problemas
+- Headers Ed25519 se generan correctamente ✅
+- Autenticación funciona ✅
+
+### Problema pendiente ❌
+
+**Endpoint incorrecto en Revolut X API**
+- API devuelve 404 en `GET https://api.revolut.com/trading/api/transactions`
+- El endpoint `/transactions` no existe o es incorrecto
+- Necesaria revisión de documentación oficial de Revolut X para encontrar endpoint correcto
+
+### Conclusión
+Fases 7.1-7.3 están correctamente implementadas (autenticación, módulo, endpoints). 
+La Fase 7.4 (carga histórica) está **bloqueada** porque el endpoint de la API de Revolut X es incorrecto.
+Próximo paso: investigar documentación de Revolut X para determinar endpoint correcto.
+
+---
+
 ## 2026-05-29 — Nuevo endpoint para verificar crecimiento del portfolio
 
 ### Endpoint `/operaciones/contar` ✅
