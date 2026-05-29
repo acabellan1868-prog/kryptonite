@@ -23,7 +23,7 @@ import bd
 logger = logging.getLogger("kryptonite.revolut_x")
 
 # ── Constantes ─────────────────────────────────────────────────────────────
-REVOLUT_X_API_BASE = "https://api.revolut.com/trading/api"
+REVOLUT_X_API_BASE = "https://revx.revolut.com/api/1.0"  # Base URL oficial de Revolut X
 REVOLUT_X_TIMEOUT = 30
 VENTANA_MAXIMA_DIAS = 7  # Límite de API: máx 7 días por petición
 MONEDAS_STAKING = {"DOT", "ADA"}  # Monedas con recompensas de staking
