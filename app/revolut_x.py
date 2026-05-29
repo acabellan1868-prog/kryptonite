@@ -12,6 +12,7 @@ import httpx
 import logging
 import hashlib
 import base64
+import time
 from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Any
 from cryptography.hazmat.primitives import serialization
@@ -75,7 +76,8 @@ def _generar_headers_autenticados(metodo: str, ruta: str) -> Optional[Dict[str, 
         return None
 
     try:
-        ahora_ms = int(datetime.utcnow().timestamp() * 1000)
+        # Usar time.time() para timestamp más fresco
+        ahora_ms = int(time.time() * 1000)
 
         # Mensaje a firmar: METODO|RUTA|TIMESTAMP
         mensaje = f"{metodo}|{ruta}|{ahora_ms}".encode("utf-8")
