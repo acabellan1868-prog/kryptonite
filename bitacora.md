@@ -1,5 +1,21 @@
 # Bitácora — Kryptonite
 
+## 2026-05-29 — Nuevo endpoint para verificar crecimiento del portfolio
+
+### Endpoint `/operaciones/contar` ✅
+Creado nuevo endpoint `GET /operaciones/contar` que devuelve el número total de operaciones en la BD con filtros opcionales:
+- Sin parámetros: total de todas las operaciones
+- Con filtros: `?moneda=DOT&origen=Revolut&tipo=Recompensa`
+
+Respuesta incluye:
+- `total`: número total
+- `desglose_por_moneda`: operaciones por cada cripto
+- `desglose_por_tipo`: operaciones por cada tipo (Recompensa, Compra, etc.)
+
+**Propósito:** Verificar si el portfolio crece por nuevas recompensas (cantidad) o solo por cambios de precio. El usuario notó que su portfolio pasó de 0.741682 a 0.742393 sin haber cargado recompensas manualmente — este endpoint permite detectar si hay un sistema automático cargando datos.
+
+---
+
 ## 2026-05-28 — Implementación Fase 7.1-7.3 (Integración Revolut X)
 
 ### Fases completadas 🤖

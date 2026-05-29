@@ -2,11 +2,13 @@
 
 ## Estado actual
 
-**Fecha:** 2026-04-21
+**Fecha:** 2026-05-29
 
-**Fase 1 (dockerización Flask) completada.** Kryptonite corre en Docker en VM 101, puerto 5001. BD operativa, todos los endpoints verificados.
+**Fases 1-3 y 7.1-7.3 completadas.** Kryptonite corre en Docker en VM 101, puerto 5001. Integración Revolut X lista (endpoints `/revolut/sincronizar`, `/revolut/recompensas`, `/revolut/estado`).
 
-**Próximo paso:** Fase 7.4 — Carga histórica inicial de recompensas. Estado: Fases 7.1-7.3 completadas (2026-05-28). Pendiente: determinar fecha de primera recompensa y ejecutar sincronización histórica.
+**Nuevo:** Endpoint `/operaciones/contar` para verificar si el portfolio crece por nuevas recompensas o cambios de precio.
+
+**Próximo paso:** Fase 7.4 — Determinar fecha de primera recompensa en Revolut X y ejecutar carga histórica. Después: Fase 7.5 — Configurar automatización semanal en Node-RED.
 
 ### Fases 1, 2 y 3 completadas ✅
 - ✅ `src/` renombrado a `app/` via `git mv`
