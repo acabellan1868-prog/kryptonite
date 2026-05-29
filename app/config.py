@@ -23,6 +23,10 @@ PORTFOLIO_FILTER = "portfolio"
 EURO_CURRENCY   = "EUR"
 DOLLAR_CURRENCY = "USD"
 
+# ── Revolut X API (Integración de recompensas de staking) ───────────────────
+KRYPTO_REVOLUT_API_KEY     = os.getenv("REVOLUT_API_KEY", "")
+KRYPTO_REVOLUT_PRIVATE_KEY = os.getenv("REVOLUT_PRIVATE_KEY", "")
+
 # ── Configuración de moneda ────────────────────────────────────────────────
 DEFAULT_CURRENCY = os.getenv("KRYPTO_DEFAULT_CURRENCY", os.getenv("DEFAULT_CURRENCY", EURO_CURRENCY))
 

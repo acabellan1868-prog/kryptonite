@@ -1,5 +1,99 @@
 # Bitácora — Kryptonite
 
+## 2026-05-28 — Implementación Fase 7.1-7.3 (Integración Revolut X)
+
+### Fases completadas 🤖
+
+**Fase 7.1 ✅ — Autenticación Ed25519**
+- Generadas claves Ed25519 (pública + privada)
+- Creado `parametros.env` con claves (no en git)
+- Actualizado `parametros.env.example` con plantilla
+- Actualizado `app/config.py` para leer `KRYPTO_REVOLUT_API_KEY` y `KRYPTO_REVOLUT_PRIVATE_KEY`
+
+**Fase 7.2 ✅ — Módulo `app/revolut_x.py`**
+- Carga de clave privada Ed25519
+- Firma de peticiones HTTP con Ed25519
+- Generación de headers autenticados (`X-Revx-API-Key`, `X-Revx-Timestamp`, `X-Revx-Signature`)
+- Función `obtener_recompensas(moneda, desde, hasta)` — itera en ventanas de 7 días
+- Función `obtener_trades(simbolo, desde, hasta)` — para futuras ampliaciones
+- Función `sincronizar_recompensas()` — descarga e inserta en BD
+- Lógica anti-duplicados basada en `transaction_id`
+
+**Fase 7.3 ✅ — Endpoints de sincronización `app/rutas/revolut.py`**
+- `GET /revolut/sincronizar` — Sincroniza DOT y ADA del 1ro del mes a hoy
+- `GET /revolut/sincronizar?moneda=DOT&desde=YYYY-MM-DD&hasta=YYYY-MM-DD` — Custom
+- `GET /revolut/estado` — Estado de sincronizaciones realizadas
+- Registrados en `app/principal.py` con tag `["Revolut X"]`
+
+### Próximas tareas 👤 + 🤖
+
+**Fase 7.4 — Carga histórica inicial**
+- [ ] 👤 Determinar fecha de primera recompensa en Revolut X (app de Revolut)
+- [ ] 🤖 Ejecutar: `GET /revolut/sincronizar?moneda=DOT&desde=<PRIMERA_FECHA>`
+- [ ] 👤 Verificar: los datos coinciden con la app de Revolut X
+
+**Fase 7.5 — Automatización Node-RED**
+- [ ] 👤 Crear flujo en Node-RED que llame a `/revolut/sincronizar` semanalmente (ej: lunes 8:00)
+- [ ] 👤 Verificar: nuevas recompensas aparecen automáticamente en `/portafolio`
+
+### Testing
+Los endpoints están listos para probar:
+```
+curl http://192.168.31.131:5001/crypto/api/revolut/sincronizar
+curl http://192.168.31.131:5001/crypto/api/revolut/estado
+```
+
+Requisito: `.env` con claves válidas de Revolut X registradas.
+
+---
+
+## 2026-05-28 — Auditoría Fase 7 (Integración Revolut X)
+
+### Situación actual
+Revisión del estado de la Fase 7 — Integración Revolut X API para automatizar importación de recompensas de staking (DOT, ADA).
+
+**Resultado:** Fase **completamente pendiente**. Roadmap documentado, sin código implementado.
+
+### Análisis
+La Fase 7 está desglosada en 5 sub-tareas:
+
+1. **7.1 — Autenticación Ed25519** (2 manuales + 2 código)
+   - [ ] 👤 Generar par de claves Ed25519 con OpenSSL en local
+   - [ ] 👤 Registrar clave pública en `exchange.revolut.com`
+   - [ ] 👤 Añadir variables a `parametros.env` (`REVOLUT_API_KEY`, `REVOLUT_PRIVATE_KEY`)
+   - [ ] 🤖 Declarar en `app/config.py` con prefijo `KRYPTO_`
+
+2. **7.2 — Módulo de integración** `app/revolut_x.py`
+   - [ ] 🤖 Firma Ed25519 (headers para autenticación)
+   - [ ] 🤖 Función `obtener_trades()` y `obtener_recompensas()` (ventanas máx. 7 días)
+   - [ ] 🤖 Lógica anti-duplicados por `transaction_id`
+
+3. **7.3 — Endpoints de sincronización** `app/rutas/revolut.py`
+   - [ ] 🤖 `GET /revolut/sincronizar?moneda=DOT&desde=YYYY-MM-DD`
+   - [ ] 🤖 `GET /revolut/sincronizar` (ambas monedas, último mes por defecto)
+   - [ ] 🤖 Registrar router en `app/principal.py`
+
+4. **7.4 — Carga histórica inicial**
+   - [ ] 👤 Determinar fecha de primera recompensa en Revolut X
+   - [ ] 🤖 Ejecutar carga histórica completa
+   - [ ] 👤 Verificar coincidencia con app de Revolut X
+
+5. **7.5 — Automatización con Node-RED**
+   - [ ] 👤 Crear flujo que llame a `/revolut/sincronizar` semanalmente
+   - [ ] 👤 Verificar que aparecen nuevas recompensas en `/portafolio`
+
+### Decisiones de diseño (ya tomadas en sesión anterior)
+- Guardar recompensas en tabla `operaciones` existente (tipo=`Recompensa`, origen=`Revolut`)
+- Autenticación Ed25519 con headers firmados por cada petición
+- API limit: 7 días por ventana (iterar en semanas para carga histórica)
+- Automatización semanal desde Node-RED
+
+### Esfuerzo estimado
+- Total: Medio (~3-4 sesiones de desarrollo)
+- Prerequisito crítico: Generar claves Ed25519 (tarea 7.1 manual)
+
+---
+
 ## 2026-04-25
 
 ### AGENTS.md local para Codex

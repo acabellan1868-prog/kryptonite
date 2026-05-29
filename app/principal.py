@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from langchain_groq import ChatGroq
 
-from rutas import datos, portfolio, analisis, ia
+from rutas import datos, portfolio, analisis, ia, revolut
 
 load_dotenv("parametros.env")
 
@@ -54,3 +54,4 @@ app.include_router(datos.router, tags=["Datos"])
 app.include_router(portfolio.router, tags=["Portfolio"])
 app.include_router(analisis.router, tags=["Análisis"])
 app.include_router(ia.router, tags=["IA"])
+app.include_router(revolut.ruta, tags=["Revolut X"])
