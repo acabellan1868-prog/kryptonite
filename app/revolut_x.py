@@ -67,7 +67,11 @@ def _generar_headers_autenticados(metodo: str, ruta: str) -> Optional[Dict[str, 
     - X-Revx-Signature: firma Ed25519 del mensaje
     """
     clave_privada = _cargar_clave_privada()
-    if not clave_privada or not KRYPTO_REVOLUT_API_KEY:
+    if not clave_privada:
+        print(f"❌ [REVOLUT_X] No se pudo cargar clave privada")
+        return None
+    if not KRYPTO_REVOLUT_API_KEY:
+        print(f"❌ [REVOLUT_X] KRYPTO_REVOLUT_API_KEY no configurada")
         return None
 
     try:
@@ -83,9 +87,10 @@ def _generar_headers_autenticados(metodo: str, ruta: str) -> Optional[Dict[str, 
             "X-Revx-Signature": firma,
             "Content-Type": "application/json",
         }
+        print(f"🔑 [REVOLUT_X] Headers generados para {metodo} {ruta}")
         return headers
     except Exception as e:
-        logger.error(f"Error al generar headers: {e}")
+        print(f"❌ [REVOLUT_X] Error al generar headers: {e}")
         return None
 
 
@@ -101,12 +106,11 @@ async def _hacer_request(
     """
     headers = _generar_headers_autenticados(metodo, ruta)
     if not headers:
-        logger.error("❌ No se pudo generar headers autenticados (credenciales faltantes)")
+        print(f"❌ [REVOLUT_X] No se pudo generar headers autenticados")
         return None
 
     url = REVOLUT_X_API_BASE + ruta
-    logger.info(f"🔄 Intentando {metodo} {url} con parámetros: {params}")
-    logger.debug(f"Headers: {headers}")
+    print(f"🌐 [REVOLUT_X] {metodo} {url} con params: {params}")
 
     try:
         async with httpx.AsyncClient(timeout=REVOLUT_X_TIMEOUT) as cliente:
@@ -115,22 +119,23 @@ async def _hacer_request(
             elif metodo == "POST":
                 respuesta = await cliente.post(url, headers=headers, json=params)
             else:
-                logger.error(f"Método HTTP no soportado: {metodo}")
+                print(f"❌ [REVOLUT_X] Método HTTP no soportado: {metodo}")
                 return None
 
-            logger.info(f"✅ Respuesta {metodo} {url}: {respuesta.status_code}")
+            print(f"📨 [REVOLUT_X] Status {respuesta.status_code} en {metodo} {url}")
             respuesta.raise_for_status()
             resultado = respuesta.json()
-            logger.debug(f"Contenido: {resultado}")
+            print(f"✅ [REVOLUT_X] Respuesta OK: {resultado}")
             return resultado
     except httpx.HTTPStatusError as e:
-        logger.error(f"❌ Error HTTP {e.response.status_code} en {metodo} {url}: {e.response.text}")
+        print(f"❌ [REVOLUT_X] Error HTTP {e.response.status_code} en {metodo} {url}")
+        print(f"   Respuesta: {e.response.text}")
         return None
     except httpx.HTTPError as e:
-        logger.error(f"❌ Error de conexión en {metodo} {url}: {e}")
+        print(f"❌ [REVOLUT_X] Error de conexión en {metodo} {url}: {e}")
         return None
     except Exception as e:
-        logger.error(f"❌ Error inesperado en petición a Revolut X: {e}")
+        print(f"❌ [REVOLUT_X] Error inesperado: {type(e).__name__}: {e}")
         return None
 
 
