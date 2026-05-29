@@ -5,14 +5,15 @@ Inicializa el LLM y el agente LangChain en el lifespan para compartirlos entre r
 
 import os
 from contextlib import asynccontextmanager
-
 from dotenv import load_dotenv
+
+# Cargar variables de entorno ANTES de cualquier import que las use
+load_dotenv("parametros.env")
+
 from fastapi import FastAPI
 from langchain_groq import ChatGroq
 
 from rutas import datos, portfolio, analisis, ia, revolut
-
-load_dotenv("parametros.env")
 
 
 @asynccontextmanager
