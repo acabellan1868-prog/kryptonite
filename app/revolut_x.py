@@ -35,19 +35,24 @@ MONEDAS_STAKING = {"DOT", "ADA"}  # Monedas con recompensas de staking
 def _cargar_clave_privada() -> Optional[ed25519.Ed25519PrivateKey]:
     """Carga la clave privada Ed25519 desde config."""
     if not KRYPTO_REVOLUT_PRIVATE_KEY:
+        print(f"❌ [REVOLUT_X] KRYPTO_REVOLUT_PRIVATE_KEY no configurada")
         logger.error("KRYPTO_REVOLUT_PRIVATE_KEY no configurada")
         return None
 
     try:
+        print(f"🔐 [REVOLUT_X] Cargando clave privada ({len(KRYPTO_REVOLUT_PRIVATE_KEY)} chars)")
         clave_privada = serialization.load_pem_private_key(
             KRYPTO_REVOLUT_PRIVATE_KEY.encode(),
             password=None
         )
         if not isinstance(clave_privada, ed25519.Ed25519PrivateKey):
+            print(f"❌ [REVOLUT_X] Clave privada no es Ed25519: {type(clave_privada)}")
             logger.error("Clave privada no es Ed25519")
             return None
+        print(f"✅ [REVOLUT_X] Clave privada cargada correctamente")
         return clave_privada
     except Exception as e:
+        print(f"❌ [REVOLUT_X] Error al cargar clave privada: {type(e).__name__}: {e}")
         logger.error(f"Error al cargar clave privada: {e}")
         return None
 
