@@ -236,7 +236,7 @@ async def diagnostico_api():
     """
     import revolut_x
 
-    candidatos = ["/balances", "/account/balances", "/account", "/accounts"]
+    candidatos = ["/transactions", "/transfers", "/ledger", "/history", "/staking", "/staking/rewards", "/wallet/transactions"]
     resultados = {}
     for path in candidatos:
         resultados[path] = await revolut_x._hacer_request("GET", path)
