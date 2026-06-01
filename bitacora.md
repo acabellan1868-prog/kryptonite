@@ -1,5 +1,34 @@
 # Bitácora — Kryptonite
 
+## 2026-06-01 — Investigación recompensas staking Revolut X — conclusión: no viable por API
+
+### Resumen
+Sesión dedicada a resolver el bloqueador de autenticación Ed25519 y explorar si la API de Revolut X expone recompensas de staking.
+
+### Correcciones realizadas en la firma Ed25519
+El 401 estaba causado por tres errores en el formato del mensaje firmado:
+1. **Orden incorrecto:** firmábamos `METODO|RUTA|TIMESTAMP` → correcto: `TIMESTAMP + METODO + RUTA` (sin separadores)
+2. **Falta de prefijo:** la ruta no incluía `/api/1.0/` → correcto: `/api/1.0/trades/DOT...`
+3. **`?` incluido en la firma:** la spec dice que el query string va sin `?` separador
+
+Tras las tres correcciones el 401 desapareció.
+
+### Exploración de endpoints
+- `/balances` ✅ — devuelve saldos por moneda. DOT tiene campo `staked` (staking activo).
+- `/trades/{symbol}` — existe pero es historial de compras/ventas, no recompensas.
+- `/transactions`, `/transfers`, `/ledger`, `/history`, `/staking`, `/staking/rewards` — todos 404.
+
+### Conclusión
+**La API de Revolut X no expone el historial de recompensas de staking.** La app de Revolut tampoco permite exportar el historial en CSV. Las recompensas van sumándose al campo `staked` del balance pero sin detalle por fecha ni importe individual.
+
+**Decisión:** dejar las recompensas de staking sin registrar en Kryptonite de momento. La diferencia actual es ~1.10 DOT y ~2.47 ADA.
+
+### Archivos modificados
+- `app/revolut_x.py` — corregido formato de firma Ed25519
+- `app/rutas/revolut.py` — añadido endpoint `/revolut/diagnostico` (temporal, para exploración)
+
+---
+
 ## 2026-05-29 (tarde) — Generación de claves Ed25519 y debug de autenticación Revolut X
 
 ### Estado actual

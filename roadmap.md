@@ -2,21 +2,17 @@
 
 ## Estado actual
 
-**Fecha:** 2026-05-29 (22:30)
+**Fecha:** 2026-06-01
 
-**Fases 1-3 y 7.1-7.3 completadas.** Kryptonite corre en Docker. Integración Revolut X en debugging:
-- ✅ Autenticación Ed25519 clave pública registrada en Revolut X
-- ✅ API Key obtenido de Revolut X: `iOtOzRpf2tu17xUt...` (64 chars)
-- ✅ Endpoints API creados (`/revolut/sincronizar`, `/revolut/recompensas`, `/revolut/estado`)
-- ✅ Endpoint `/operaciones/contar` para verificar crecimiento de portfolio
-- ❌ **BLOQUEADOR:** Revolut X rechaza firma Ed25519 → HTTP 401 "Signature verification rejected"
+**Fases 1-3 y 7.1-7.3 completadas.** La autenticación Ed25519 con Revolut X está resuelta. La integración de recompensas de staking se ha descartado por limitaciones de la API.
 
-**Bloqueador actual:** La firma de las peticiones HTTP no valida. Posibles causas:
-1. Formato del mensaje a firmar incorrecto (¿debería incluir query params?)
-2. Timestamp en unidades incorrectas
-3. Falta prefijo en header X-Revx-Signature
+- ✅ Autenticación Ed25519 funcionando correctamente
+- ✅ Endpoint `/balances` de Revolut X accesible (saldos por moneda)
+- ❌ **Descartado:** Revolut X no expone historial de recompensas de staking por API ni permite exportar CSV desde la app
 
-**Próximo paso:** Fase 7.4 (continuación) — Revisar documentación oficial de Revolut X para verificar formato exacto de firma Ed25519 y corregir implementación.
+**Situación:** Las recompensas de staking (DOT y ADA) no se registran en Kryptonite. Diferencia actual: ~1.10 DOT y ~2.47 ADA sin contabilizar.
+
+**Próximo paso:** Sin acción planificada en la fase 7. Continuar con fase 2, 3 o 4 según prioridad.
 
 ### Fases 1, 2 y 3 completadas ✅
 - ✅ `src/` renombrado a `app/` via `git mv`
