@@ -121,12 +121,13 @@ async def _hacer_request(
 
     Los query params se incluyen en la ruta al firmar, tal como exige Revolut X.
     """
-    # Construir la ruta con query params para incluirla en la firma
+    # La ruta a firmar debe incluir el prefijo /api/1.0/ y los query params
+    ruta_completa = f"/api/1.0{ruta}"
     if params:
         query_string = "&".join(f"{k}={v}" for k, v in params.items())
-        ruta_firmada = f"{ruta}?{query_string}"
+        ruta_firmada = f"{ruta_completa}?{query_string}"
     else:
-        ruta_firmada = ruta
+        ruta_firmada = ruta_completa
 
     headers = _generar_headers_autenticados(metodo, ruta_firmada)
     if not headers:
