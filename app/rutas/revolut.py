@@ -230,16 +230,20 @@ async def estado_sincronizacion():
 @ruta.get("/revolut/diagnostico")
 async def diagnostico_api():
     """
-    Llama a /balance de Revolut X y devuelve la respuesta cruda.
+    Prueba varios endpoints de Revolut X y devuelve las respuestas crudas.
 
-    Útil para explorar qué endpoints y datos están disponibles.
+    Útil para explorar qué endpoints existen y qué datos devuelven.
     """
     import revolut_x
 
-    resultado = await revolut_x._hacer_request("GET", "/balance")
+    candidatos = ["/balances", "/account/balances", "/account", "/accounts"]
+    resultados = {}
+    for path in candidatos:
+        resultados[path] = await revolut_x._hacer_request("GET", path)
+
     return {
         "status": "ok",
-        "respuesta_cruda": resultado,
+        "respuestas": resultados,
         "timestamp": datetime.now().isoformat(),
     }
 
