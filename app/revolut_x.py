@@ -63,14 +63,19 @@ def _generar_firma(mensaje: bytes, clave_privada: ed25519.Ed25519PrivateKey) -> 
     return base64.b64encode(firma_bytes).decode("utf-8")
 
 
-def _generar_headers_autenticados(metodo: str, ruta: str) -> Optional[Dict[str, str]]:
+def _generar_headers_autenticados(metodo: str, ruta: str, cuerpo: str = "") -> Optional[Dict[str, str]]:
     """
     Genera headers autenticados con firma Ed25519 para Revolut X.
 
-    Headers requeridos por Revolut X:
-    - X-Revx-API-Key: clave pública
-    - X-Revx-Timestamp: timestamp actual en ms
-    - X-Revx-Signature: firma Ed25519 del mensaje
+    Formato del mensaje a firmar (sin separadores):
+        TIMESTAMP + METODO + RUTA_CON_QUERY_PARAMS + CUERPO
+
+    Ejemplo: "1765360896219GET/api/1.0/trades/DOT?start_date=2026-01-01"
+
+    Headers requeridos:
+    - X-Revx-API-Key: API key de 64 caracteres
+    - X-Revx-Timestamp: Unix timestamp en milisegundos
+    - X-Revx-Signature: firma Ed25519 en base64
     """
     clave_privada = _cargar_clave_privada()
     if not clave_privada:
@@ -81,11 +86,10 @@ def _generar_headers_autenticados(metodo: str, ruta: str) -> Optional[Dict[str, 
         return None
 
     try:
-        # Usar time.time() para timestamp más fresco
         ahora_ms = int(time.time() * 1000)
 
-        # Mensaje a firmar: METODO|RUTA|TIMESTAMP
-        mensaje_str = f"{metodo}|{ruta}|{ahora_ms}"
+        # Formato oficial Revolut X: TIMESTAMP + METODO + RUTA + CUERPO (todo concatenado, sin separadores)
+        mensaje_str = f"{ahora_ms}{metodo}{ruta}{cuerpo}"
         mensaje = mensaje_str.encode("utf-8")
         firma = _generar_firma(mensaje, clave_privada)
 
@@ -96,7 +100,7 @@ def _generar_headers_autenticados(metodo: str, ruta: str) -> Optional[Dict[str, 
             "Content-Type": "application/json",
         }
         print(f"🔑 [REVOLUT_X] Headers generados para {metodo} {ruta}")
-        print(f"   Mensaje a firmar: {mensaje_str}")
+        print(f"   Mensaje a firmar: {mensaje_str[:100]}...")
         print(f"   Firma (base64): {firma[:50]}...")
         print(f"   API Key: {KRYPTO_REVOLUT_API_KEY[:20]}...")
         return headers
@@ -114,8 +118,17 @@ async def _hacer_request(
 ) -> Optional[Dict[str, Any]]:
     """
     Realiza petición HTTP autenticada a Revolut X.
+
+    Los query params se incluyen en la ruta al firmar, tal como exige Revolut X.
     """
-    headers = _generar_headers_autenticados(metodo, ruta)
+    # Construir la ruta con query params para incluirla en la firma
+    if params:
+        query_string = "&".join(f"{k}={v}" for k, v in params.items())
+        ruta_firmada = f"{ruta}?{query_string}"
+    else:
+        ruta_firmada = ruta
+
+    headers = _generar_headers_autenticados(metodo, ruta_firmada)
     if not headers:
         print(f"❌ [REVOLUT_X] No se pudo generar headers autenticados")
         return None
