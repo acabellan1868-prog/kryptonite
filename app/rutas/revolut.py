@@ -227,6 +227,23 @@ async def estado_sincronizacion():
         raise HTTPException(500, f"Error al obtener estado: {e}")
 
 
+@ruta.get("/revolut/diagnostico")
+async def diagnostico_api():
+    """
+    Llama a /balance de Revolut X y devuelve la respuesta cruda.
+
+    Útil para explorar qué endpoints y datos están disponibles.
+    """
+    import revolut_x
+
+    resultado = await revolut_x._hacer_request("GET", "/balance")
+    return {
+        "status": "ok",
+        "respuesta_cruda": resultado,
+        "timestamp": datetime.now().isoformat(),
+    }
+
+
 @ruta.get("/operaciones/contar")
 async def contar_operaciones(
     moneda: str = None,
